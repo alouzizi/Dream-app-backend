@@ -48,7 +48,7 @@ export class UserService {
       });
 
       // Generate a JWT token
-      const payload = { email: user.email, sub: user.id }; // Customize the payload
+      const payload = { email: user.email, sub: user.id ,role:user.role}; // Customize the payload
       const token = jwt.sign(payload, jwtConstants.secret, { expiresIn: "1h" });
 
       return {
@@ -70,7 +70,7 @@ export class UserService {
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (isPasswordValid) {
       // Generate a JWT token
-      const payload = { email: user.email, sub: user.id }; // Customize the payload as per your needs
+      const payload = { email: user.email, sub: user.id,role:user.role }; // Customize the payload as per your needs
       const token = jwt.sign(payload, jwtConstants.secret, { expiresIn: "1h" });
       return {
         message: "Login successful",
@@ -88,7 +88,7 @@ export class UserService {
     });
     if (user) {
       // Generate a JWT token
-      const payload = { email: user.email, sub: user.id }; // Customize the payload as per your needs
+      const payload = { email: user.email, sub: user.id,role:user.role }; // Customize the payload as per your needs
       const token = jwt.sign(payload, jwtConstants.secret, { expiresIn: "1h" });
       return {
         message: "Login successful",
@@ -101,6 +101,7 @@ export class UserService {
 
   //update user
   async updateUser(id: string, updateUserDto: any) {
+  try{
 	const { name, email, phoneNumber, dob, country, city,gender
 	} = updateUserDto;
 	return this.prisma.user.update({
@@ -115,6 +116,9 @@ export class UserService {
 		gender,
 	  },
 	});
+  }catch(error){
+      return error;
+  }
   }
 
   async getUserInfo(id: string) {
@@ -122,4 +126,30 @@ export class UserService {
       where: { id: Number(id) },
     });
   }
+
+  //update password
+  async updatePassword(id: string, body: any) {
+    const { oldPassword, password } = body;
+    const hashedPassword = await bcrypt.hash(password, 10);
+    //check old password
+    const user = await this.prisma.user.findUnique({
+      where: { id: Number(id) },
+    });
+    const isPasswordValid = await bcrypt.compare(oldPassword, user.password);
+    if (!isPasswordValid) {
+      throw new Error("Invalid old password");
+    }
+    return this.prisma.user.update({
+      where: { id: Number(id) },
+      data: {
+        password: hashedPassword,
+      },
+    });
+  }
+
+  //get all users
+  async getAllUsers() {
+    return this.prisma.user.findMany();
+  }
+    
 }
