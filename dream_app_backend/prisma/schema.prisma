@@ -1,0 +1,185 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRoles {
+  ADMIN
+  USER
+}
+
+enum GameStatus {
+  PENDING
+  IN_PROGRESS
+  ENDED
+}
+
+enum SponsorStatus {
+  ACTIVE
+  INACTIVE
+}
+
+
+model User {
+  id          Int         @id @default(autoincrement())
+  name        String      @unique
+  phoneNumber String      @unique
+  email       String      @unique
+  password    String
+  gender      String
+  points      Int         @default(0)
+  totalPoints Int         @default(0)
+  type        String
+  diamonds    Int         @default(0)
+  level       Int         @default(0)
+  avatar      String?
+  dob         DateTime
+  country     String
+  city        String
+  dream       String?
+  role        UserRoles
+  createAt    DateTime    @default(now())
+  games       UserGames[]
+  winners     Winners[]
+  notifications Notification[]
+  reports Report[]
+}
+
+
+model Games {
+  id               Int         @id @default(autoincrement())
+  requiredDiamonds Int
+  duration         Int // duration in seconds
+  reward           String
+  trophyTypes       String[]
+  answersId        Int?
+  images           String?
+  options          String?
+  status           GameStatus
+  sponsorsId       Sponsors[]
+  licenseId        String?
+  winnerId         Int?
+  winners          Winners[]   @relation("GameWinners")
+  userGames        UserGames[]
+  questions         Quiz?
+  scratchCard       ScratchCard?
+  reports Report[]
+}
+
+model Winners {
+  id         Int      @id @default(autoincrement())
+  rank       Int
+  user       User     @relation(fields: [userId], references: [id])
+  userId     Int
+  game       Games    @relation(fields: [gameId], references: [id], name: "GameWinners")
+  gameId     Int
+  videoProof String // URL or path to the video proof file
+  createdAt  DateTime @default(now())
+}
+
+model UserGames {
+  userId   Int
+  gameId   Int
+  gameTime Int
+  score    Int
+  User     User  @relation(fields: [userId], references: [id])
+  Games    Games @relation(fields: [gameId], references: [id])
+
+  @@id([userId, gameId]) // Composite primary key
+}
+
+model Sponsors {
+  id     Int     @id @default(autoincrement())
+  name   String
+  logo   String
+  status SponsorStatus
+  games  Games[]
+  // description String
+  // website     String
+}
+
+model Quiz {
+  id          Int        @id @default(autoincrement())
+  title       String    
+  description String?    
+  questions   Question[] 
+  createdAt   DateTime   @default(now()) 
+  gameId   Int @unique
+  game     Games    @relation(fields: [gameId], references: [id])
+}
+
+model Question {
+  id        Int      @id @default(autoincrement())
+  quizId    Int      @unique
+  quiz      Quiz     @relation(fields: [quizId], references: [id])
+  question  String   
+  options   Option[]
+  answer    String   
+}
+
+model Option {
+  id         Int      @id @default(autoincrement())
+  text       String
+  isCorrect  Boolean
+  questionId Int
+  question   Question  @relation(fields: [questionId], references: [id])
+}
+
+model ScratchCard {
+  id   Int    @id @default(autoincrement())
+  name String
+  gameId Int @unique
+  game Games  @relation(fields: [gameId], references: [id])
+  // options   options[]
+}
+
+
+model store {
+  id        Int @id @default(autoincrement())
+  itemsId   Int
+  items     items[] 
+}
+
+model items {
+  id          Int    @id @default(autoincrement())
+  name        String
+  price       Int
+  productType String
+  storeId     Int @unique
+  store       store @relation(fields: [storeId], references: [id]) 
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  title     String
+  message   String
+  userId    Int
+  user        User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+
+model Report {
+  id                  Int      @id @default(autoincrement())
+  userId              Int
+  gameId              Int
+  trophyType          String
+  sponsorsId          Int
+  expenses            Decimal
+  additionalExpenses  Decimal
+  amount              Decimal
+  reportDate          DateTime
+  hasTrophy           Boolean
+  createdAt           DateTime @default(now())
+
+  user     User   @relation(fields: [userId], references: [id])
+  game     Games   @relation(fields: [gameId], references: [id])
+}
+
