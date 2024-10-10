@@ -146,5 +146,10 @@ export class UserService {
       },
     });
   }
+
+  //get all users
+  async getAllUsers() {
+    return this.prisma.user.findMany();
+  }
     
 }

@@ -11,6 +11,8 @@ export class UserController {
     private readonly userService: UserService,
     private readonly prismaService: PrismaClient
   ) {}
+
+
   @Post("register")
   async register(@Body() createUserDto: CreateUserDto) {
     return this.userService.register(createUserDto);
@@ -48,4 +50,11 @@ export class UserController {
         const id = req.user.id;
         return this.userService.updatePassword(id,body);
   }
+
+  //forget password
+
+
+
+  
+
 }
