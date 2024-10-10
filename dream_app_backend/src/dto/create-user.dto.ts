@@ -1,4 +1,4 @@
-import { IsEmail, IsEnum, IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator';
+import { IsEmail, IsEnum, IsNotEmpty, IsOptional, IsString, Min, MinLength } from 'class-validator';
 import { UserRoles } from '@prisma/client';  // Import the UserRoles enum
 
 export class CreateUserDto {
@@ -15,10 +15,13 @@ export class CreateUserDto {
   phoneNumber: string;
 
   @IsString()
-  @MinLength(6)
+  @IsOptional()  // Make password optional if you're allowing Google login
+  @MinLength(6) 
   password: string;
 
   @IsString()
+  @IsOptional()  // Optional field; defaults to null if not provided
+  @MinLength(6)
   googleId?: string;
 
   @IsEnum(UserRoles)
