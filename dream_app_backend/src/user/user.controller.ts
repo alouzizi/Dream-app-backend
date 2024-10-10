@@ -1,8 +1,9 @@
-import { Body, Controller, Get, Param, Post } from "@nestjs/common";
+import { Body, Controller, Get, Param, Post,UseGuards  } from "@nestjs/common";
 import { UserService } from "./user.service";
 import { PrismaClient } from "@prisma/client";
 import { CreateUserDto } from '../dto/create-user.dto';
-
+import { AuthGuard } from '@nestjs/passport';
+import { JwtAuthGuard } from "src/jwt-auth.guard";
 @Controller("user")
 export class UserController {
   constructor(
@@ -21,9 +22,10 @@ export class UserController {
 
   @Get()
   async IsGoogleAuth(@Body()loginUserDto: CreateUserDto) {
-
+	
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get(":id")
   async getUserInfo(@Param("id") id: string) {
     return this.userService.getUserInfo(id);
