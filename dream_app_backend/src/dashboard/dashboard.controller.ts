@@ -1,8 +1,11 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Res, UseGuards } from '@nestjs/common';
 import { DashboardService } from './dashboard.service';
 import { PrismaClient } from '@prisma/client';
 import { RoleGuard, Roles, UserRoles } from 'src/role.guard';
 import { JwtAuthGuard } from 'src/jwt-auth.guard';
+import { CreateReportDto } from 'src/dto/create-raports.dto';
+import { Response } from 'express';
+import * as fs from 'fs';
 
 @Controller('dashboard')
 export class DashboardController {
@@ -49,22 +52,17 @@ export class DashboardController {
     @UseGuards(JwtAuthGuard, RoleGuard)
     @Roles(UserRoles.ADMIN)
     @Post()
-    async createReport(@Body() reportData: {
-      userId: number;
-      gameId: number;
-      trophyType: string;
-      sponsorsId: number;
-      expenses: number;
-      additionalExpenses: number;
-      amount: number;
-      reportDate: string;
-      hasTrophy: boolean;
-    }) {
-      const reportDate = new Date(reportData.reportDate);
-      return this.dashboardService.createReport({
-        ...reportData,
-        reportDate,
-      });
+    async createReport(@Body() createReportDto: CreateReportDto) {
+     
+      return this.dashboardService.createReport(createReportDto);
+    }
+
+    //update report
+    @UseGuards(JwtAuthGuard, RoleGuard)
+    @Roles(UserRoles.ADMIN)
+    @Post('updateReport/:id')
+    async updateReport(id: string,@Body() createReportDto: CreateReportDto) {
+        return this.dashboardService.updateReport(id, createReportDto);
     }
 
     @UseGuards(JwtAuthGuard, RoleGuard)
@@ -72,6 +70,29 @@ export class DashboardController {
     @Get('allReports')
     async getAllReports() {
         return this.dashboardService.getAllReports();
+    }
+
+    @UseGuards(JwtAuthGuard, RoleGuard)
+    @Roles(UserRoles.ADMIN)
+    @Get('topThreeWinners/:gameId')
+    async getTopThreeWinners(gameId: number) {
+        return this.dashboardService.getTopThreeWinners(gameId);
+    }
+
+
+
+    //report to pdf
+    @Get('generate-pdf')
+    async generatePDF(@Res() res: Response) {
+        const pdfPath = await this.dashboardService.generateReportsPDF();
+        res.download(pdfPath, 'reports.pdf', (err) => {
+        if (err) {
+            console.error('Error downloading file:', err);
+            res.status(500).send('Error downloading file');
+        }
+        // Delete the file after sending
+        fs.unlinkSync(pdfPath);
+        });
     }
 
 }
