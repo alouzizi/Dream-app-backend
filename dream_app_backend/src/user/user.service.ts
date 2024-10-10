@@ -99,6 +99,24 @@ export class UserService {
     throw new Error("Invalid credentials");
   }
 
+  //update user
+  async updateUser(id: string, updateUserDto: any) {
+	const { name, email, phoneNumber, dob, country, city,gender
+	} = updateUserDto;
+	return this.prisma.user.update({
+	  where: { id: Number(id) },
+	  data: {
+		name,
+		email,
+		phoneNumber,
+		dob: dob ? new Date(dob) : null, // Convert to Date if provided
+		country,
+		city,
+		gender,
+	  },
+	});
+  }
+
   async getUserInfo(id: string) {
     return this.prisma.user.findUnique({
       where: { id: Number(id) },
