@@ -19,6 +19,11 @@ export class UserController {
     return this.userService.login(loginUserDto);
   }
 
+  @Get()
+  async IsGoogleAuth(@Body()loginUserDto: CreateUserDto) {
+
+  }
+
   @Get(":id")
   async getUserInfo(@Param("id") id: string) {
     return this.userService.getUserInfo(id);

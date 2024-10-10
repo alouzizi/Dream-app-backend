@@ -30,6 +30,18 @@ export class UserService {
   
 	  throw new Error('Invalid credentials');
 	}
+
+	async isgoogleAuth(loginUserDto: any) {
+		const { googleId } = loginUserDto;
+		const user = await this.prisma.user.findUnique({
+		  where: { googleId },
+		});
+		if (user) {
+		  return { message: 'Login successful', user };
+		}
+		throw new Error('Invalid credentials');
+		
+	}
   
 	async getUserInfo(id: string) {
 	  return this.prisma.user.findUnique({

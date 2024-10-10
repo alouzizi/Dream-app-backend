@@ -33,6 +33,7 @@ model User {
   phoneNumber String      @unique
   email       String      @unique
   password    String
+  googleId    String?     @unique
   gender      String
   points      Int         @default(0)
   totalPoints Int         @default(0)

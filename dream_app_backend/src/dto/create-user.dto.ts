@@ -19,6 +19,9 @@ export class CreateUserDto {
   @IsNotEmpty()
   password: string;
 
+  @IsString()
+  googleId?: string;
+
   @IsEnum(UserRoles)
   @IsOptional()  // Optional field; defaults to USER if not provided
   role?: UserRoles;

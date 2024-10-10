@@ -13,6 +13,8 @@ CREATE TABLE "User" (
     "name" TEXT NOT NULL,
     "phoneNumber" TEXT NOT NULL,
     "email" TEXT NOT NULL,
+    "password" TEXT NOT NULL,
+    "googleId" TEXT,
     "gender" TEXT NOT NULL,
     "points" INTEGER NOT NULL DEFAULT 0,
     "totalPoints" INTEGER NOT NULL DEFAULT 0,
@@ -180,6 +182,9 @@ CREATE UNIQUE INDEX "User_phoneNumber_key" ON "User"("phoneNumber");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "User_googleId_key" ON "User"("googleId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Quiz_gameId_key" ON "Quiz"("gameId");
