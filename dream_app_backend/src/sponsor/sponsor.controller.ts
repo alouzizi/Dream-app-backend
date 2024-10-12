@@ -10,13 +10,13 @@ import {
   UseGuards,
 } from "@nestjs/common";
 import { SponsorService } from "./sponsor.service";
-import { CreateSponsorDto } from "./sponsorDto";
-import { UpdateSponsorDto } from "./sponsorDto";
+import { CreateSponsorDto } from "./sponsor.dto";
+import { UpdateSponsorDto } from "./sponsor.dto";
 import { SponsorStatus } from "@prisma/client";
 import { RoleGuard,  Roles, UserRoles } from 'src/role.guard';
 import { JwtAuthGuard } from 'src/jwt-auth.guard';
 
-// @UseGuards(JwtAuthG
+
 @UseGuards(JwtAuthGuard, RoleGuard)
 @Roles(UserRoles.ADMIN)
 @Controller("sponsor")
