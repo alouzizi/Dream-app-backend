@@ -156,11 +156,7 @@ export class AuthService {
   }
   }
 
-  async getUserInfo(id: string) {
-    return this.prisma.user.findUnique({
-      where: { id: Number(id) },
-    });
-  }
+ 
 
   //update password
   async updatePassword(id: string, body: any) {
@@ -182,9 +178,5 @@ export class AuthService {
     });
   }
 
-  //get all users
-  async getAllUsers() {
-    return this.prisma.user.findMany();
-  }
     
 }

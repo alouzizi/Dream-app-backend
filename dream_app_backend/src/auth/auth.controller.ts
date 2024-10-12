@@ -9,9 +9,7 @@ import { RoleGuard, Roles, UserRoles } from 'src/role.guard';
 export class AuthController {
   constructor(
     private readonly userService: AuthService,
-    private readonly prismaService: PrismaClient
   ) {}
-
 
   @Post("register")
   async register(@Body() createUserDto: CreateUserDto) {
@@ -26,14 +24,6 @@ export class AuthController {
   @Get("google")
   async IsGoogleAuth(@Body()loginUserDto: CreateUserDto) {
 	return this.userService.isgoogleAuth(loginUserDto);
-  }
-
-
-  @UseGuards(JwtAuthGuard, RoleGuard)
-  @Roles(UserRoles.ADMIN, UserRoles.USER)
-  @Get(":id")
-  async getUserInfo(@Param("id") id: string) {
-    return this.userService.getUserInfo(id);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -53,8 +43,5 @@ export class AuthController {
 
   //forget password
 
-
-
-  
 
 }
