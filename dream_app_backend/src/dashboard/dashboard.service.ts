@@ -34,7 +34,7 @@ export class DashboardService {
 
     //get all sponsors
     async getAllSponsors() {
-        return await this.prisma.sponsors.findMany();
+        return await this.prisma.sponsor.findMany();
     }
 
     //get all games

@@ -64,7 +64,7 @@ model Games {
   images           String?
   options          String?
   status           GameStatus
-  sponsorsId       Sponsors[]
+  sponsorId       Sponsor[]
   licenseId        String?
   winnerId         Int?
   winners          Winners[]   @relation("GameWinners")
@@ -96,7 +96,7 @@ model UserGames {
   @@id([userId, gameId]) // Composite primary key
 }
 
-model Sponsors {
+model Sponsor {
   id     Int     @id @default(autoincrement())
   name   String
   logo   String
