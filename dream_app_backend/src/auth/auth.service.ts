@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { PrismaClient, UserRoles } from "@prisma/client";
 import * as jwt from "jsonwebtoken";
 import * as bcrypt from "bcrypt";
@@ -22,14 +22,32 @@ export class AuthService {
         city,
         gender,
       } = createUserDto;
-
+  
+      // Check if user already exists by email, phone number, or Google ID
+      const existingUser = await this.prisma.user.findFirst({
+        where: {
+          OR: [
+            { email: email },
+            { phoneNumber: phoneNumber },
+            { googleId: googleId }
+          ]
+        }
+      });
+  
+      if (existingUser) {
+        return {
+          message: "User already exists",
+          statusCode: 400,
+        };
+      }
+  
       let hashedPassword = null;
-
+  
       // If googleId is not provided, hash the password
       if (!googleId && password) {
         hashedPassword = await bcrypt.hash(password, 10);
       }
-
+  
       // Create user with or without the password (depending on googleId)
       const user = await this.prisma.user.create({
         data: {
@@ -37,21 +55,22 @@ export class AuthService {
           email,
           phoneNumber,
           googleId,
-		  password: hashedPassword,  // Will be null if not provided
-		  dob: dob ? new Date(dob) : null, // Convert to Date if provided
-		  role: role ?? UserRoles.USER,  
+          password: hashedPassword,  // Will be null if not provided
+          dob: dob ? new Date(dob) : null, // Convert to Date if provided
+          role: role ?? UserRoles.USER,
           country: country,
           city: city,
           gender: gender,
           type: "normal", // Default type // normal and special
         },
       });
-
+  
       // Generate a JWT token
-      const payload = { email: user.email, sub: user.id ,role:user.role}; // Customize the payload
+      const payload = { email: user.email, sub: user.id, role: user.role }; // Customize the payload
       const token = jwt.sign(payload, jwtConstants.secret, { expiresIn: "1h" });
-
+  
       return {
+        message: "User created successfully",
         user,
         token, // Return the JWT token
       };
@@ -59,27 +78,43 @@ export class AuthService {
       return error;
     }
   }
+  
 
   async login(loginUserDto: any) {
     const { email, password } = loginUserDto;
-    const user = await this.prisma.user.findUnique({
-      where: { email },
-    });
-
-    // Add password validation logic here (hashing, etc.)
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (isPasswordValid) {
-      // Generate a JWT token
-      const payload = { email: user.email, sub: user.id,role:user.role }; // Customize the payload as per your needs
-      const token = jwt.sign(payload, jwtConstants.secret, { expiresIn: "1h" });
-      return {
-        message: "Login successful",
-        user,
-        token, // Return the JWT token
-      };
+  
+    try {
+      // Find the user by email
+      const user = await this.prisma.user.findUnique({
+        where: { email },
+      });
+  
+      // Check if the user exists
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+  
+      // Validate the password
+      const isPasswordValid = await bcrypt.compare(password, user.password);
+  
+      if (isPasswordValid) {
+        const payload = { email: user.email, sub: user.id, role: user.role}; // Include status if needed
+        const token = jwt.sign(payload, jwtConstants.secret, { expiresIn: "1h" });
+  
+        return {
+          message: "Login successful",
+          user,
+          token, // Return the JWT token
+        };
+      }
+  
+      // If password is incorrect
+      throw new UnauthorizedException('Invalid credentials');
+    } catch (error) {
+      throw error; // Re-throw any caught exception so it returns the correct status
     }
-    throw new Error("Invalid credentials");
   }
+
 
   async isgoogleAuth(loginUserDto: any) {
     const { googleId } = loginUserDto;
