@@ -1,14 +1,14 @@
 import { Body, Controller, Get, Param, Post,Req,UseGuards  } from "@nestjs/common";
-import { UserService } from "./auth.service";
+import { AuthService } from "./auth.service";
 import { PrismaClient } from "@prisma/client";
 import { CreateUserDto } from '../dto/create-user.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { JwtAuthGuard } from "src/jwt-auth.guard";
 import { RoleGuard, Roles, UserRoles } from 'src/role.guard';
-@Controller("user")
-export class UserController {
+@Controller("auth")
+export class AuthController {
   constructor(
-    private readonly userService: UserService,
+    private readonly userService: AuthService,
     private readonly prismaService: PrismaClient
   ) {}
 

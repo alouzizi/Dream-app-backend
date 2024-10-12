@@ -5,7 +5,7 @@ import * as bcrypt from "bcrypt";
 import { jwtConstants } from "src/constants";
 
 @Injectable()
-export class UserService {
+export class AuthService {
   constructor(private prisma: PrismaClient) {}
 
   async register(createUserDto: any) {

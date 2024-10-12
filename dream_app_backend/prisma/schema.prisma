@@ -142,19 +142,19 @@ model ScratchCard {
 }
 
 
-model store {
-  id        Int @id @default(autoincrement())
-  itemsId   Int
-  items     items[] 
-}
+// model store {
+//   id        Int @id @default(autoincrement())
+//   itemsId   Int
+//   items     items[] 
+// }
 
-model items {
+model store { 
   id          Int    @id @default(autoincrement())
   name        String
   price       Int
   productType String
-  storeId     Int @unique
-  store       store @relation(fields: [storeId], references: [id]) 
+  // storeId     Int @unique
+  // store       store @relation(fields: [storeId], references: [id]) 
 }
 
 model Notification {
