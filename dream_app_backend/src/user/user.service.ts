@@ -99,7 +99,7 @@ export class UserService {
 
 
     //get user filter by name or total diamond or total coin or total point or name
-    async getUserFilter(name?: string, diamond?: number, coin?: number, point?: number) {
+    async getUserFilter(name?: string, diamond?: number, coin?: number, point?: number, type?: string) {
         // Build the filter conditionally based on the presence of parameters
         const filters = [];
       
@@ -117,6 +117,10 @@ export class UserService {
       
         if (point) {
           filters.push({ totalPoints: point });
+        }
+
+        if (type) {
+          filters.push({ type: type });
         }
       
         // If no filters are provided, return all users
