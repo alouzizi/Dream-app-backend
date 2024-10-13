@@ -79,7 +79,21 @@ export class DashboardController {
         return this.dashboardService.getTopThreeWinners(gameId);
     }
 
+    //get ended games by admin
+    @UseGuards(JwtAuthGuard, RoleGuard)
+    @Roles(UserRoles.ADMIN)
+    @Get('endedGames')
+    async getEndedGames() {
+        return this.dashboardService.getEndedGames();
+    }
 
+    //get ended games without report
+    @UseGuards(JwtAuthGuard, RoleGuard)
+    @Roles(UserRoles.ADMIN)
+    @Get('endedGamesWithoutReports')
+    async getEndedGamesWithoutReports() {
+        return this.dashboardService.getEndedGamesWithoutReports();
+    }
 
     //report to pdf
     @Get('generate-pdf')

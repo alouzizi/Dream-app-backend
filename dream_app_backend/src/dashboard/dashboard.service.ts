@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
+import { GameStatus, PrismaClient } from '@prisma/client';
 import { CreateReportDto } from 'src/dto/create-raports.dto';
 import * as fs from 'fs';
 import PDFDocument from 'pdfkit';
@@ -94,6 +94,31 @@ export class DashboardService {
     //get all winners
     async getAllWinners() {
         return await this.prisma.winners.findMany();
+    }
+
+    //get ended games by admin
+    async getEndedGames() {
+        return await this.prisma.games.findMany({
+          where: {
+            status:  GameStatus.ENDED
+          }
+        });
+    }
+
+    //get ended games wihtout report
+    async getEndedGamesWithoutReports() {
+      return await this.prisma.games.findMany({
+        where: {
+          status: GameStatus.ENDED,
+          reports: {
+            none: {}
+          }
+        },
+        include: {
+          winners: true,
+          sponsorId: true
+        }
+      });
     }
 
     //create raport
