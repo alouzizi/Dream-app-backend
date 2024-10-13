@@ -1,8 +1,9 @@
-import { Controller, Get, InternalServerErrorException, Param, Req, UnauthorizedException, UseGuards } from '@nestjs/common';
+import { Body, ConflictException, Controller, Delete, Get, HttpException, HttpStatus, InternalServerErrorException, Param, ParseIntPipe, Post, Req, Res, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { UserService } from './user.service';
 import { RoleGuard, Roles, UserRoles } from 'src/role.guard';
 import { JwtAuthGuard } from 'src/jwt-auth.guard';
 import { log } from 'console';
+import { CreateUserDto } from 'src/dto/create-user.dto';
 
 @Controller('user')
 export class UserController {
@@ -54,7 +55,7 @@ export class UserController {
     //delete user
     @UseGuards(JwtAuthGuard, RoleGuard)
     @Roles(UserRoles.ADMIN)
-    @Get("delete/:id")
+    @Delete("delete/:id")
     async deleteUser(@Param("id") id: string) {
         return this.userService.deleteUser(id);
     }
@@ -63,8 +64,38 @@ export class UserController {
     @UseGuards(JwtAuthGuard, RoleGuard)
     @Roles(UserRoles.ADMIN)
     @Get("addDiamond/:id/:diamond")
-    async addUserDiamond(@Param("id") id: string, @Param("diamond") diamond: number) {
-        return this.userService.addUserDiamond(id, diamond);
+    async addUserDiamond(
+      @Param("id", ParseIntPipe) id: number,
+      @Param("diamond", ParseIntPipe) diamond: number
+    ) {
+      try {
+        const updatedUser = await this.userService.addUserDiamond(id, diamond);
+        return { message: "Diamonds added successfully", user: updatedUser };
+      } catch (error) {
+        if (error instanceof HttpException) {
+          throw error;
+        }
+        throw new HttpException('Failed to add diamonds', HttpStatus.INTERNAL_SERVER_ERROR);
+      }
+    }
+
+    //add user coin
+    @UseGuards(JwtAuthGuard, RoleGuard)
+    @Roles(UserRoles.ADMIN)
+    @Get("addCoin/:id/:coin")
+    async addUserCoin(
+      @Param("id", ParseIntPipe) id: number,
+      @Param("coin", ParseIntPipe) coin: number
+    ) {
+      try {
+        const updatedUser = await this.userService.addUserCoin(id, coin);
+        return { message: "Coins added successfully", user: updatedUser };
+      } catch (error) {
+        if (error instanceof HttpException) {
+          throw error;
+        }
+        throw new HttpException('Failed to add coins', HttpStatus.INTERNAL_SERVER_ERROR);
+      }
     }
 
     //get user filter by name or total diamond or total coin or total point or name
@@ -78,6 +109,22 @@ export class UserController {
     @Param("point") point?: number
     ) {
         return this.userService.getUserFilter(name, diamond, coin, point);
+    }
+
+    //admin can create user
+    @UseGuards(JwtAuthGuard, RoleGuard)
+    @Roles(UserRoles.ADMIN)
+    @Post("createUser")
+    async createUser(@Body() body: CreateUserDto, @Res() res) {
+        try {
+        const user = await this.userService.createUser(body);
+        res.status(201).json({message: "User created", user});
+        } catch (err) {
+        if (err instanceof ConflictException) {
+            return res.status(409).json({message: err.message});
+        }
+        return res.status(400).json({message: "Error in creating user"});
+        }
     }
 
 
