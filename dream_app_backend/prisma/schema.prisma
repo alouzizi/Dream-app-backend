@@ -69,8 +69,9 @@ model Games {
   winnerId         Int?
   winners          Winners[]   @relation("GameWinners")
   userGames        UserGames[]
-  questions         Quiz?
+  questions        Question[]
   scratchCard       ScratchCard?
+  name             String
   reports Report[]
 }
 
@@ -96,6 +97,27 @@ model UserGames {
   @@id([userId, gameId]) // Composite primary key
 }
 
+
+
+
+model Question {
+  id        Int       @id @default(autoincrement())
+  gameId    Int
+  maxTime   Int
+  question  String    
+  options   Option[]
+  quiz      Games      @relation(fields: [gameId], references: [id])
+}
+model Option {
+  id        Int       @id @default(autoincrement())
+  questionId Int
+  question  Question   @relation(fields: [questionId], references: [id])
+  optionText String
+  isCorrect Boolean   @default(false)
+}
+
+
+
 model Sponsor {
   id     Int     @id @default(autoincrement())
   name   String
@@ -106,32 +128,6 @@ model Sponsor {
   // website     String
 }
 
-model Quiz {
-  id          Int        @id @default(autoincrement())
-  title       String    
-  description String?    
-  questions   Question[] 
-  createdAt   DateTime   @default(now()) 
-  gameId   Int @unique
-  game     Games    @relation(fields: [gameId], references: [id])
-}
-
-model Question {
-  id        Int      @id @default(autoincrement())
-  quizId    Int      @unique
-  quiz      Quiz     @relation(fields: [quizId], references: [id])
-  question  String   
-  options   Option[]
-  answer    String   
-}
-
-model Option {
-  id         Int      @id @default(autoincrement())
-  text       String
-  isCorrect  Boolean
-  questionId Int
-  question   Question  @relation(fields: [questionId], references: [id])
-}
 
 model ScratchCard {
   id   Int    @id @default(autoincrement())
@@ -142,19 +138,11 @@ model ScratchCard {
 }
 
 
-// model store {
-//   id        Int @id @default(autoincrement())
-//   itemsId   Int
-//   items     items[] 
-// }
-
 model store { 
   id          Int    @id @default(autoincrement())
   name        String
   price       Int
   productType String
-  // storeId     Int @unique
-  // store       store @relation(fields: [storeId], references: [id]) 
 }
 
 model Notification {
