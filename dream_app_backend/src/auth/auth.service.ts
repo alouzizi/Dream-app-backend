@@ -3,12 +3,13 @@ import { PrismaClient, UserRoles } from "@prisma/client";
 import * as jwt from "jsonwebtoken";
 import * as bcrypt from "bcrypt";
 import { jwtConstants } from "src/constants";
+import { CreateUserDto } from "src/dto/create-user.dto";
 
 @Injectable()
 export class AuthService {
   constructor(private prisma: PrismaClient) {}
 
-  async register(createUserDto: any) {
+  async register(createUserDto: CreateUserDto) {
     try {
       const {
         name,
@@ -21,6 +22,7 @@ export class AuthService {
         country,
         city,
         gender,
+        type,
       } = createUserDto;
   
       // Check if user already exists by email, phone number, or Google ID
@@ -61,7 +63,7 @@ export class AuthService {
           country: country,
           city: city,
           gender: gender,
-          type: "normal", // Default type // normal and special
+          type: type, // Default type // normal and special
         },
       });
   
@@ -137,7 +139,7 @@ export class AuthService {
   //update user
   async updateUser(id: string, updateUserDto: any) {
   try{
-	const { name, email, phoneNumber, dob, country, city,gender
+	const { name, email, phoneNumber, dob, country, city,gender,type
 	} = updateUserDto;
 	return this.prisma.user.update({
 	  where: { id: Number(id) },
@@ -149,6 +151,7 @@ export class AuthService {
 		country,
 		city,
 		gender,
+    type,
 	  },
 	});
   }catch(error){

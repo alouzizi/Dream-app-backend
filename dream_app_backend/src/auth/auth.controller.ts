@@ -5,6 +5,10 @@ import { CreateUserDto } from '../dto/create-user.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { JwtAuthGuard } from "src/jwt-auth.guard";
 import { RoleGuard, Roles, UserRoles } from 'src/role.guard';
+import { Request } from 'express';
+import { LoginDto } from "src/dto/login-validator.dto";
+import { GoogleDto } from "src/dto/google-validator.dto";
+
 @Controller("auth")
 export class AuthController {
   constructor(
@@ -12,17 +16,17 @@ export class AuthController {
   ) {}
 
   @Post("register")
-  async register(@Body() createUserDto: CreateUserDto) {
+  register(@Req() req: Request,@Body() createUserDto: CreateUserDto) {
     return this.userService.register(createUserDto);
   }
 
   @Post("login")
-  async login(@Body() loginUserDto: CreateUserDto) {
+  login(@Body() loginUserDto: LoginDto) {
     return this.userService.login(loginUserDto);
   }
 
   @Get("google")
-  async IsGoogleAuth(@Body()loginUserDto: CreateUserDto) {
+  async IsGoogleAuth(@Body()loginUserDto: GoogleDto) {
 	return this.userService.isgoogleAuth(loginUserDto);
   }
 

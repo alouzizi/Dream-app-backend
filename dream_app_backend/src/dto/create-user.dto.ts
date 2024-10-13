@@ -47,5 +47,9 @@ export class CreateUserDto {
   @IsOptional()
   dream?: string;
 
+
+  @IsString()
+  @IsNotEmpty({message: "Type must not be empty"})
+  type: string;
   // Other fields can be added based on the schema (like avatar, points, etc.)
 }

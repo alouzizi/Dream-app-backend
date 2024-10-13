@@ -1,8 +1,9 @@
-import { Controller, Get, InternalServerErrorException, Param, Req, UnauthorizedException, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, InternalServerErrorException, Param, Post, Req, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { UserService } from './user.service';
 import { RoleGuard, Roles, UserRoles } from 'src/role.guard';
 import { JwtAuthGuard } from 'src/jwt-auth.guard';
 import { log } from 'console';
+import { CreateUserDto } from 'src/dto/create-user.dto';
 
 @Controller('user')
 export class UserController {
@@ -78,6 +79,14 @@ export class UserController {
     @Param("point") point?: number
     ) {
         return this.userService.getUserFilter(name, diamond, coin, point);
+    }
+
+    //admin can create user
+    @UseGuards(JwtAuthGuard, RoleGuard)
+    @Roles(UserRoles.ADMIN)
+    @Post("createUser")
+    async createUser(@Body() body: CreateUserDto) {
+        return this.userService.createUser(body);
     }
 
 
