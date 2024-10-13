@@ -34,7 +34,7 @@ export class DashboardService {
 
     //get all sponsors
     async getAllSponsors() {
-        return await this.prisma.sponsor.findMany();
+        return await this.prisma.sponsors.findMany();
     }
 
     //get all games
@@ -116,7 +116,7 @@ export class DashboardService {
         },
         include: {
           winners: true,
-          sponsorId: true
+          // sponsorId: true
         }
       });
     }
