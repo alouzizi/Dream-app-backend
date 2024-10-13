@@ -106,9 +106,10 @@ export class UserController {
     @Param("name") name?: string,
     @Param("diamond") diamond?: number,
     @Param("coin") coin?: number,
-    @Param("point") point?: number
+    @Param("point") point?: number,
+    @Param("type") type?: string
     ) {
-        return this.userService.getUserFilter(name, diamond, coin, point);
+        return this.userService.getUserFilter(name, diamond, coin, point,type);
     }
 
     //admin can create user
