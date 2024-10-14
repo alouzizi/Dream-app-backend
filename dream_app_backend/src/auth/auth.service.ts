@@ -4,12 +4,14 @@ import * as jwt from "jsonwebtoken";
 import * as bcrypt from "bcrypt";
 import { jwtConstants } from "src/constants";
 import { CreateUserDto } from "src/dto/create-user.dto";
+import * as fs from 'fs';
+import * as path from 'path';
 
 @Injectable()
 export class AuthService {
   constructor(private prisma: PrismaClient) {}
 
-  async register(createUserDto: CreateUserDto) {
+  async register(createUserDto: CreateUserDto,avatar: Express.Multer.File) {
     try {
       const {
         name,
@@ -49,6 +51,16 @@ export class AuthService {
       if (!googleId && password) {
         hashedPassword = await bcrypt.hash(password, 10);
       }
+
+      let avatarPath = null;
+      if (avatar) {
+        const uploadDir = './uploads/avatars';
+        if (!fs.existsSync(uploadDir)) {
+          fs.mkdirSync(uploadDir, { recursive: true });
+        }
+        avatarPath = path.join(uploadDir, `${Date.now()}-${avatar.originalname}`);
+        fs.writeFileSync(avatarPath, avatar.buffer);
+      }
   
       // Create user with or without the password (depending on googleId)
       const user = await this.prisma.user.create({
@@ -62,6 +74,7 @@ export class AuthService {
           role: role ?? UserRoles.USER,
           country: country,
           city: city,
+          avatar: avatarPath,
           gender: gender,
           type: type, // Default type // normal and special
         },
@@ -137,10 +150,21 @@ export class AuthService {
   }
 
   //update user
-  async updateUser(id: string, updateUserDto: any) {
+  async updateUser(id: string, updateUserDto: any,avatar: Express.Multer.File) {
   try{
 	const { name, email, phoneNumber, dob, country, city,gender,type
 	} = updateUserDto;
+
+  let avatarPath = null;
+      if (avatar) {
+        const uploadDir = './uploads/avatars';
+        if (!fs.existsSync(uploadDir)) {
+          fs.mkdirSync(uploadDir, { recursive: true });
+        }
+        avatarPath = path.join(uploadDir, `${Date.now()}-${avatar.originalname}`);
+        fs.writeFileSync(avatarPath, avatar.buffer);
+      }
+
 	return this.prisma.user.update({
 	  where: { id: Number(id) },
 	  data: {
@@ -150,6 +174,7 @@ export class AuthService {
 		dob: dob ? new Date(dob) : null, // Convert to Date if provided
 		country,
 		city,
+    avatar: avatarPath,
 		gender,
     type,
 	  },

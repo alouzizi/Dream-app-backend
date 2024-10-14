@@ -53,5 +53,8 @@ export class CreateUserDto {
   @IsString()
   @IsNotEmpty({message: "Type must not be empty"})
   type: string;
+
+  @ApiProperty({ type: 'string', format: 'binary', required: false })
+  avatar?: any;
   // Other fields can be added based on the schema (like avatar, points, etc.)
 }

@@ -43,4 +43,6 @@ export class StoreController {
   deleteStore(@Param('id') id: string) {
     return this.storeService.deleteStore(+id);
   }
+
+  //add pay method check if user have enough balance to buy the product if yes add the product to user
 }
