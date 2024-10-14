@@ -29,8 +29,9 @@ export class GameController {
 
   //get result of the game by game id when the game status is ended if user in the game return the result
 
-
   //get available events
+
+  //user see number of users in the game -> socket.io
 
 
 
