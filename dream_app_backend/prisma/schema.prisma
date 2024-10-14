@@ -14,14 +14,16 @@ enum UserRoles {
 }
 
 enum GameStatus {
-  PENDING
-  IN_PROGRESS
+  CREATED
+  STARTED
   ENDED
+  CLOSED
 }
 
 enum SponsorStatus {
   ACTIVE
   INACTIVE
+  REJECTED
 }
 
 
@@ -54,6 +56,7 @@ model User {
 
 model Games {
   id               Int         @id @default(autoincrement())
+  name             String
   requiredDiamonds Int
   duration         Int // duration in seconds
   reward           String
@@ -62,12 +65,12 @@ model Games {
   images           String?
   options          String?
   status           GameStatus
-  sponsorsId       Sponsors[]
+  sponsorId       Sponsor[]
   licenseId        String?
   winnerId         Int?
   winners          Winners[]   @relation("GameWinners")
   userGames        UserGames[]
-  questions         Quiz?
+  questions        Question[]
   scratchCard       ScratchCard?
   reports Report[]
 }
@@ -94,7 +97,7 @@ model UserGames {
   @@id([userId, gameId]) // Composite primary key
 }
 
-model Sponsors {
+model Sponsor {
   id     Int     @id @default(autoincrement())
   name   String
   logo   String
@@ -104,31 +107,23 @@ model Sponsors {
   // website     String
 }
 
-model Quiz {
-  id          Int        @id @default(autoincrement())
-  title       String    
-  description String?    
-  questions   Question[] 
-  createdAt   DateTime   @default(now()) 
-  gameId   Int @unique
-  game     Games    @relation(fields: [gameId], references: [id])
-}
+
 
 model Question {
-  id        Int      @id @default(autoincrement())
-  quizId    Int      @unique
-  quiz      Quiz     @relation(fields: [quizId], references: [id])
-  question  String   
+  id        Int       @id @default(autoincrement())
+  gameId    Int
+  maxTime   Int
+  question  String    
   options   Option[]
-  answer    String   
+  quiz      Games      @relation(fields: [gameId], references: [id])
 }
 
 model Option {
-  id         Int      @id @default(autoincrement())
-  text       String
-  isCorrect  Boolean
+  id        Int       @id @default(autoincrement())
   questionId Int
-  question   Question  @relation(fields: [questionId], references: [id])
+  question  Question   @relation(fields: [questionId], references: [id])
+  optionText String
+  isCorrect Boolean   @default(false)
 }
 
 model ScratchCard {
@@ -142,18 +137,12 @@ model ScratchCard {
 
 model store {
   id        Int @id @default(autoincrement())
-  itemsId   Int
-  items     items[] 
-}
-
-model items {
-  id          Int    @id @default(autoincrement())
   name        String
   price       Int
   productType String
-  storeId     Int @unique
-  store       store @relation(fields: [storeId], references: [id]) 
+
 }
+
 
 model Notification {
   id        Int      @id @default(autoincrement())

@@ -16,7 +16,7 @@ async createGame(createGameDto: CreateGameDto) {
 		requiredDiamonds: createGameDto.requiredDiamonds,
 		duration: createGameDto.duration,
 		reward: createGameDto.reward,
-		status: GameStatus.PENDING,
+		status: GameStatus.CREATED,
 		sponsorId: createGameDto.sponsorId.length > 0 ? {
 			connect: createGameDto.sponsorId .map(id => ({ id })),
 		  } : undefined,
