@@ -2,7 +2,8 @@ import { Injectable, NotAcceptableException } from '@nestjs/common';
 import { GameStatus, PrismaClient } from '@prisma/client';
 import { CreateReportDto } from 'src/dto/create-raports.dto';
 import * as fs from 'fs';
-import PDFDocument from 'pdfkit';
+// import PDFDocument from 'pdfkit';
+const PDFDocument = require('pdfkit');
 
 @Injectable()
 export class DashboardService {
@@ -395,95 +396,123 @@ export class DashboardService {
 
 
 
-        //report to pdf ///////// //////////////////////////////////////////////
-        async generateReportsPDF(): Promise<string> {
-            const reports = await this.prisma.report.findMany({
-              include: {
-                user: { select: { name: true } },
-                game: { select: { id: true } },
-              },
-            });
-        
-            const pdfBuffer: Buffer = await new Promise(resolve => {
-              const doc = new PDFDocument({ margin: 50 });
-              
+    async generateReportsPDF(): Promise<Buffer> {
+      const reports = await this.prisma.report.findMany({
+          include: {
+              user: { select: { name: true } },
+              game: { select: { id: true } },
+          },
+      });
+
+      return new Promise((resolve, reject) => {
+          const doc = new PDFDocument({ margin: 50, size: 'A4', layout: 'landscape' });
+          const buffers: Buffer[] = [];
+
+          doc.on('data', buffers.push.bind(buffers));
+          doc.on('end', () => {
+              const pdfData = Buffer.concat(buffers);
+              resolve(pdfData);
+          });
+
+          try {
               this.generateHeader(doc);
               this.generateReportTable(doc, reports);
-              
+              this.generateFooter(doc);
               doc.end();
-              
-              const buffers = [];
-              doc.on('data', buffers.push.bind(buffers));
-              doc.on('end', () => {
-                const pdfData = Buffer.concat(buffers);
-                resolve(pdfData);
-              });
-            });
-        
-            const pdfPath = `reports_${Date.now()}.pdf`;
-            fs.writeFileSync(pdfPath, pdfBuffer);
-        
-            return pdfPath;
+          } catch (error) {
+              reject(error);
           }
-        
-          private generateHeader(doc: PDFKit.PDFDocument) {
-            doc
-              .fontSize(20)
-              .text('Reports Summary', { align: 'center' })
-              .moveDown();
-          }
-        
-          private generateReportTable(doc: PDFKit.PDFDocument, reports: any[]) {
-            const tableTop = 150;
-            const columns = [
-              { header: 'User', width: 70 },
-              { header: 'Game', width: 50 },
-              { header: 'Trophy', width: 70 },
-              { header: 'Expenses', width: 70 },
-              { header: 'Add. Expenses', width: 70 },
-              { header: 'Amount', width: 70 },
-              { header: 'Date', width: 80 },
-            ];
-        
-            this.generateTableRow(doc, tableTop, columns.map(col => col.header));
-        
-            let rowTop = tableTop + 20;
-        
-            reports.forEach(report => {
-              const row = [
-                report.user.name,
-                `Game #${report.game.id}`,
-                report.trophyType,
-                `$${report.expenses}`,
-                `$${report.additionalExpenses}`,
-                `$${report.amount}`,
-                report.reportDate.toLocaleDateString(),
-              ];
-        
-              this.generateTableRow(doc, rowTop, row, columns.map(col => col.width));
-              rowTop += 20;
-        
-              if (rowTop > 750) {
-                doc.addPage();
-                rowTop = 50;
-                this.generateTableRow(doc, rowTop, columns.map(col => col.header));
-                rowTop += 20;
-              }
-            });
-          }
-        
-          private generateTableRow(doc: PDFKit.PDFDocument, y: number, items: string[], widths?: number[]) {
-            let x = 50;
-            items.forEach((item, i) => {
-              doc
-                .fontSize(10)
-                .text(item, x, y, {
-                  width: widths ? widths[i] : 100,
-                  align: 'left',
-                });
-              x += (widths ? widths[i] : 100) + 10;
-            });
-          }
+      });
+  }
 
+  private generateHeader(doc: PDFKit.PDFDocument, marginTop = 50) {
+    try {
+        doc.image('./assets/logo.png', 50, marginTop, { width: 50 });
+    } catch (error) {
+        console.warn('Logo image not found, skipping logo.');
+    }
 
+    doc
+        .fillColor('#444444')
+        .fontSize(24)
+        .text('Reports Summary', 110, marginTop + 7)  // Adjusted for top margin
+        .fontSize(12)
+        .text('Generated on: ' + new Date().toLocaleString(), { align: 'right' })
+        .moveDown();
+}
+
+private generateFooter(doc: PDFKit.PDFDocument, marginBottom = 100) {
+    const pageCount = doc.bufferedPageRange().count;
+    for (let i = 0; i < pageCount; i++) {
+        doc.switchToPage(i);
+        doc.fontSize(8).text(
+            `Page ${i + 1} of ${pageCount}`,
+            50,
+            doc.page.height - marginBottom,  // Adjusted for bottom margin
+            { align: 'center' }
+        );
+    }
+}
+
+private generateReportTable(doc: PDFKit.PDFDocument, reports: any[], marginTop = 100, marginBottom = 50) {
+    const tableTop = marginTop + 100;  // Adjusted for top margin
+    const columns = [
+        { header: 'User', width: 100 },
+        { header: 'Game', width: 80 },
+        { header: 'Trophy', width: 100 },
+        { header: 'Expense of Prize', width: 80 },
+        { header: 'Additional Expense', width: 100 },
+        { header: 'Amount', width: 80 },
+        { header: 'Date', width: 100 },
+    ];
+
+    this.generateTableRow(doc, tableTop, columns.map(col => col.header), columns.map(col => col.width), true);
+
+    let rowTop = tableTop + 25;
+
+    reports.forEach((report, index) => {
+        const row = [
+            report.user.name,
+            `Game #${report.game.id}`,
+            report.trophyType,
+            `$${report.expenses.toFixed(2)}`,
+            `$${report.additionalExpenses.toFixed(2)}`,
+            `$${report.amount.toFixed(2)}`,
+            new Date(report.reportDate).toLocaleDateString(),
+        ];
+
+        const isEvenRow = index % 2 === 0;
+        if (isEvenRow) {
+            doc.rect(50, rowTop - 5, 670, 20).fill('#f2f2f2').stroke();
+        }
+
+        this.generateTableRow(doc, rowTop, row, columns.map(col => col.width));
+        rowTop += 20;
+
+        // Adjust for bottom margin: make sure the row doesn't go into the bottom margin
+        if (rowTop > doc.page.height - marginBottom - 20) {  // 20 is for row height
+            doc.addPage();
+            this.generateTableRow(doc, marginTop, columns.map(col => col.header), columns.map(col => col.width), true);
+            rowTop = marginTop + 25;
+        }
+    });
+}
+
+  private generateTableRow(doc: PDFKit.PDFDocument, y: number, items: string[], widths: number[], isHeader = false) {
+    let x = 50;
+    items.forEach((item, i) => {
+        doc
+            .fillColor('gray')  // Set the text color to red
+            .fontSize(isHeader ? 12 : 10)
+            .font(isHeader ? 'Helvetica-Bold' : 'Helvetica')
+            .text(item, x, y, {
+                width: widths[i],
+                align: 'left',
+                ellipsis: true,
+            });
+        x += widths[i] + 10;
+    });
+}
+
+      
 }

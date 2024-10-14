@@ -113,21 +113,29 @@ export class DashboardController {
         return this.dashboardService.getEndedGamesWithoutReports();
     }
 
+    @UseGuards(JwtAuthGuard, RoleGuard)
+    @Roles(UserRoles.ADMIN)
     @Get('generate-pdf')
     @ApiOperation({ summary: 'Generate PDF report' })
     @ApiResponse({ status: 200, description: 'Returns a PDF file.' })
     @ApiResponse({ status: 500, description: 'Error generating or downloading file.' })
     async generatePDF(@Res() res: Response) {
-        const pdfPath = await this.dashboardService.generateReportsPDF();
-        res.download(pdfPath, 'reports.pdf', (err) => {
-            if (err) {
-                console.error('Error downloading file:', err);
-                res.status(500).send('Error downloading file');
-            }
-            // Delete the file after sending
-            fs.unlinkSync(pdfPath);
-        });
+        try {
+            const pdfBuffer = await this.dashboardService.generateReportsPDF();
+            
+            res.set({
+                'Content-Type': 'application/pdf',
+                'Content-Disposition': 'attachment; filename=reports.pdf',
+                'Content-Length': pdfBuffer.length,
+            });
+            
+            res.end(pdfBuffer);
+        } catch (error) {
+            console.error('Error generating PDF:', error);
+            res.status(500).json({ message: 'Error generating PDF', error: error.message });
+        }
     }
+    
 
     @UseGuards(JwtAuthGuard, RoleGuard)
     @Roles(UserRoles.ADMIN)
