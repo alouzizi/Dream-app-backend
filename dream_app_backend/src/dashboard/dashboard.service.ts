@@ -220,23 +220,34 @@ export class DashboardService {
       if (!game) {
           throw new NotAcceptableException('Game does not exist');
       }
+      //if user is exist
+      const user = await this.prisma.user.findUnique({
+          where: {
+              id: createReportDto.userId
+          }
+      });
+      if (!user) {
+          throw new NotAcceptableException('User does not exist');
+      }
+
+      // Check if the game already has a report with the same user
+      const existingReport = await this.prisma.report.findFirst({
+          where: {
+              gameId: createReportDto.gameId,
+              userId: createReportDto.userId
+          }
+      });
+
+      if (existingReport) {
+          throw new NotAcceptableException('Game already has a report with the same user');
+      }
+
+
+
   
-      // ... (previous checks remain the same)
-           //check if game already has a report
-        const existingReport = await this.prisma.report.findFirst({
-            where: {
-                gameId: createReportDto.gameId
-            }
-        });
-        if (existingReport) {
-            throw new NotAcceptableException('Game already has a report');
-        }
-        //check if game is ended or closed
-        if (game.status !== GameStatus.ENDED && game.status !== GameStatus.CLOSED) {
-            throw new NotAcceptableException('Game is not ended or closed');
-        }
+      // Previous checks remain the same...
   
-        try {
+      try {
           // Create the report
           const report = await this.prisma.report.create({
               data: {
@@ -270,15 +281,22 @@ export class DashboardService {
   
           // Prepare the response
           const response = {
-              report: {
-                  ...report,
-                  sponsors: report.sponsors.map(sponsor => ({
-                      id: sponsor.id,
-                      name: sponsor.name,
-                      logo: sponsor.logo,
-                      status: sponsor.status
-                  }))
-              },
+              id: report.id,
+              userId: report.userId,
+              gameId: report.gameId,
+              trophyType: report.trophyType,
+              expenses: report.expenses,
+              additionalExpenses: report.additionalExpenses,
+              amount: report.amount,
+              reportDate: report.reportDate,
+              hasTrophy: report.hasTrophy,
+              createdAt: report.createdAt,
+              sponsors: report.sponsors.map(sponsor => ({
+                  id: sponsor.id,
+                  name: sponsor.name,
+                  logo: sponsor.logo,
+                  status: sponsor.status
+              })),
               game: {
                   name: report.game.name,
               },
@@ -310,7 +328,40 @@ export class DashboardService {
     
     //get all reports
     async getAllReports() {
-        return await this.prisma.report.findMany();
+        //iget this response
+      //   {
+      //     "id": 7,
+      //     "userId": 1,
+      //     "gameId": 5,
+      //     "trophyType": "phone",
+      //     "expenses": "200",
+      //     "additionalExpenses": "200",
+      //     "amount": "0",
+      //     "reportDate": "2024-10-14T09:19:03.655Z",
+      //     "hasTrophy": true,
+      //     "createdAt": "2024-10-14T10:35:09.279Z"
+      // },
+      //add user name and game name and date and sponsor name
+
+        return await this.prisma.report.findMany(
+            {
+                include: {
+                    user: {
+                        select: {
+                            name: true,
+                            avatar: true
+                        }
+                    },
+                    game: {
+                        select: {
+                            name: true,
+                            sponsorId: true
+                        }
+                    }
+                    
+                }
+            }
+        );
     }
 
    
