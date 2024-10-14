@@ -23,6 +23,17 @@ export class GameController {
     return this.gameService.getGameById(+ id);
   }
 
+  //get games by mobile app user the games have status created and just name of game and required diamonds and duration and reward
+
+  //add user to the game whene user join the game 
+
+  //get result of the game by game id when the game status is ended if user in the game return the result
+
+
+  //get available events
+
+
+
 
 
 }
