@@ -45,6 +45,7 @@ CREATE TABLE "Games" (
     "status" "GameStatus" NOT NULL,
     "licenseId" TEXT,
     "winnerId" INTEGER,
+    "name" TEXT NOT NULL,
 
     CONSTRAINT "Games_pkey" PRIMARY KEY ("id")
 );
@@ -72,32 +73,11 @@ CREATE TABLE "UserGames" (
 );
 
 -- CreateTable
-CREATE TABLE "Sponsors" (
-    "id" SERIAL NOT NULL,
-    "name" TEXT NOT NULL,
-    "logo" TEXT NOT NULL,
-    "status" "SponsorStatus" NOT NULL,
-
-    CONSTRAINT "Sponsors_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "Quiz" (
-    "id" SERIAL NOT NULL,
-    "title" TEXT NOT NULL,
-    "description" TEXT,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "gameId" INTEGER NOT NULL,
-
-    CONSTRAINT "Quiz_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
 CREATE TABLE "Question" (
     "id" SERIAL NOT NULL,
-    "quizId" INTEGER NOT NULL,
+    "gameId" INTEGER NOT NULL,
+    "maxTime" INTEGER NOT NULL,
     "question" TEXT NOT NULL,
-    "answer" TEXT NOT NULL,
 
     CONSTRAINT "Question_pkey" PRIMARY KEY ("id")
 );
@@ -105,11 +85,21 @@ CREATE TABLE "Question" (
 -- CreateTable
 CREATE TABLE "Option" (
     "id" SERIAL NOT NULL,
-    "text" TEXT NOT NULL,
-    "isCorrect" BOOLEAN NOT NULL,
     "questionId" INTEGER NOT NULL,
+    "optionText" TEXT NOT NULL,
+    "isCorrect" BOOLEAN NOT NULL DEFAULT false,
 
     CONSTRAINT "Option_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Sponsor" (
+    "id" SERIAL NOT NULL,
+    "name" TEXT NOT NULL,
+    "logo" TEXT NOT NULL,
+    "status" "SponsorStatus" NOT NULL,
+
+    CONSTRAINT "Sponsor_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -124,20 +114,11 @@ CREATE TABLE "ScratchCard" (
 -- CreateTable
 CREATE TABLE "store" (
     "id" SERIAL NOT NULL,
-    "itemsId" INTEGER NOT NULL,
-
-    CONSTRAINT "store_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "items" (
-    "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
     "price" INTEGER NOT NULL,
     "productType" TEXT NOT NULL,
-    "storeId" INTEGER NOT NULL,
 
-    CONSTRAINT "items_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "store_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -169,7 +150,7 @@ CREATE TABLE "Report" (
 );
 
 -- CreateTable
-CREATE TABLE "_GamesToSponsors" (
+CREATE TABLE "_GamesToSponsor" (
     "A" INTEGER NOT NULL,
     "B" INTEGER NOT NULL
 );
@@ -187,22 +168,13 @@ CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 CREATE UNIQUE INDEX "User_googleId_key" ON "User"("googleId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Quiz_gameId_key" ON "Quiz"("gameId");
-
--- CreateIndex
-CREATE UNIQUE INDEX "Question_quizId_key" ON "Question"("quizId");
-
--- CreateIndex
 CREATE UNIQUE INDEX "ScratchCard_gameId_key" ON "ScratchCard"("gameId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "items_storeId_key" ON "items"("storeId");
+CREATE UNIQUE INDEX "_GamesToSponsor_AB_unique" ON "_GamesToSponsor"("A", "B");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "_GamesToSponsors_AB_unique" ON "_GamesToSponsors"("A", "B");
-
--- CreateIndex
-CREATE INDEX "_GamesToSponsors_B_index" ON "_GamesToSponsors"("B");
+CREATE INDEX "_GamesToSponsor_B_index" ON "_GamesToSponsor"("B");
 
 -- AddForeignKey
 ALTER TABLE "Winners" ADD CONSTRAINT "Winners_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -217,19 +189,13 @@ ALTER TABLE "UserGames" ADD CONSTRAINT "UserGames_userId_fkey" FOREIGN KEY ("use
 ALTER TABLE "UserGames" ADD CONSTRAINT "UserGames_gameId_fkey" FOREIGN KEY ("gameId") REFERENCES "Games"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Quiz" ADD CONSTRAINT "Quiz_gameId_fkey" FOREIGN KEY ("gameId") REFERENCES "Games"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Question" ADD CONSTRAINT "Question_quizId_fkey" FOREIGN KEY ("quizId") REFERENCES "Quiz"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Question" ADD CONSTRAINT "Question_gameId_fkey" FOREIGN KEY ("gameId") REFERENCES "Games"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Option" ADD CONSTRAINT "Option_questionId_fkey" FOREIGN KEY ("questionId") REFERENCES "Question"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "ScratchCard" ADD CONSTRAINT "ScratchCard_gameId_fkey" FOREIGN KEY ("gameId") REFERENCES "Games"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "items" ADD CONSTRAINT "items_storeId_fkey" FOREIGN KEY ("storeId") REFERENCES "store"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Notification" ADD CONSTRAINT "Notification_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -241,7 +207,7 @@ ALTER TABLE "Report" ADD CONSTRAINT "Report_userId_fkey" FOREIGN KEY ("userId") 
 ALTER TABLE "Report" ADD CONSTRAINT "Report_gameId_fkey" FOREIGN KEY ("gameId") REFERENCES "Games"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "_GamesToSponsors" ADD CONSTRAINT "_GamesToSponsors_A_fkey" FOREIGN KEY ("A") REFERENCES "Games"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "_GamesToSponsor" ADD CONSTRAINT "_GamesToSponsor_A_fkey" FOREIGN KEY ("A") REFERENCES "Games"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "_GamesToSponsors" ADD CONSTRAINT "_GamesToSponsors_B_fkey" FOREIGN KEY ("B") REFERENCES "Sponsors"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "_GamesToSponsor" ADD CONSTRAINT "_GamesToSponsor_B_fkey" FOREIGN KEY ("B") REFERENCES "Sponsor"("id") ON DELETE CASCADE ON UPDATE CASCADE;

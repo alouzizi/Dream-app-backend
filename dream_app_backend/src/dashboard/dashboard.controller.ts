@@ -95,4 +95,12 @@ export class DashboardController {
         });
     }
 
+    //get games that are not yet reported
+    @UseGuards(JwtAuthGuard, RoleGuard)
+    @Roles(UserRoles.ADMIN)
+    @Get('unreportedGames')
+    async getUnreportedGames() {
+        return this.dashboardService.getUnreportedGames();
+    }
+
 }

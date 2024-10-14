@@ -42,6 +42,27 @@ export class DashboardService {
         return await this.prisma.games.findMany();
     }
 
+    //get unreported games
+    async getUnreportedGames() {
+        return await this.prisma.games.findMany({
+            where: {
+                reports: {
+                    none: {}
+                },
+                status: 'ENDED'
+                
+            },
+            include: {
+                winners: {
+                    select: {
+                        rank: true
+                    }
+                  },
+                sponsorId: true
+            }
+        });
+    }
+
     //create game // upload csv if needed // gamet 2 types quiz and skratch and spin
     async createGame(data: any) {
         return await this.prisma.games.create({
