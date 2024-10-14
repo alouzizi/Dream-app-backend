@@ -1,18 +1,20 @@
-import { ConflictException, HttpException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, HttpException, HttpStatus, Injectable, NotAcceptableException, NotFoundException } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import { CreateUserDto } from 'src/dto/create-user.dto';
+import { UserRoles } from 'src/role.guard';
 
 @Injectable()
 export class UserService {
     constructor(private prisma: PrismaClient) {}
 
     async getUserInfo(id: string) {
-        return this.prisma.user.findUnique({
-            where: { 
-                id: Number(id),
-                role: 'USER'
-            },
+        const user = await this.prisma.user.findUnique({
+          where: { id: Number(id) },
         });
+        if (!user) {
+          throw new NotFoundException(`User with ID ${id} not found`);
+        }
+        return user;;
     }
 
     
@@ -36,6 +38,19 @@ export class UserService {
 
     //delete user
     async deleteUser(id: string) {
+        //handel if user not found
+        const user = await this.prisma.user.findUnique({
+          where: { id: Number(id) },
+        });
+        if (!user) {
+          throw new NotFoundException(`User with ID ${id} not found`);
+        }
+
+        if (user.role == UserRoles.ADMIN)
+        {
+          throw new NotAcceptableException('You can\'t remove this user')
+        }
+
         return this.prisma.user.delete({
           where: { id: Number(id) },
         });

@@ -60,19 +60,22 @@ model Games {
   requiredDiamonds Int
   duration         Int // duration in seconds
   reward           String
-  trophyTypes       String[]
+  trophyTypes      String[]
   answersId        Int?
   images           String?
   options          String?
   status           GameStatus
-  sponsorId       Sponsor[]
+  sponsorId        Sponsor[]
   licenseId        String?
   winnerId         Int?
   winners          Winners[]   @relation("GameWinners")
   userGames        UserGames[]
   questions        Question[]
-  scratchCard       ScratchCard?
-  reports Report[]
+  scratchCard      ScratchCard?
+  reports          Report[]
+  createdAt        DateTime    @default(now())
+  startDate        DateTime?
+  endDate          DateTime?
 }
 
 model Winners {

@@ -7,43 +7,53 @@ export class CreateUserDto {
   @IsString()
   @IsNotEmpty()
   name: string;
+
   @ApiProperty()
   @IsEmail()
   @IsNotEmpty()
   email: string;
+
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
   phoneNumber: string;
+
   @ApiProperty()
   @IsString()
   @IsOptional()  // Make password optional if you're allowing Google login
   @MinLength(6) 
   password: string;
+
   @ApiProperty()
   @IsString()
   @IsOptional()  // Optional field; defaults to null if not provided
   @MinLength(6)
   googleId?: string;
+
   @ApiProperty()
   @IsEnum(UserRoles)
   @IsOptional()  // Optional field; defaults to USER if not provided
   role?: UserRoles;
+
   @ApiProperty()
   @IsString()
   @IsOptional()
   gender?: string;
+
   @ApiProperty()
   @IsOptional()
   dob?: Date;  // Assuming date of birth
+
   @ApiProperty()
   @IsString()
   @IsOptional()
   country?: string;
+
   @ApiProperty()
   @IsString()
   @IsOptional()
   city?: string;
+  
   @ApiProperty()
   @IsString()
   @IsOptional()
