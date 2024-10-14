@@ -99,37 +99,66 @@ export class UserService {
 
 
     //get user filter by name or total diamond or total coin or total point or name
-    async getUserFilter(name?: string, diamond?: number, coin?: number, point?: number, type?: string) {
-        // Build the filter conditionally based on the presence of parameters
-        const filters = [];
-      
-        if (name) {
-          filters.push({ name: { contains: name } });
-        }
-      
-        if (diamond) {
-          filters.push({ diamonds: diamond });
-        }
-      
-        if (coin) {
-          filters.push({ points: coin });
-        }
-      
-        if (point) {
-          filters.push({ totalPoints: point });
-        }
-
-        if (type) {
-          filters.push({ type: type });
-        }
-      
-        // If no filters are provided, return all users
-        return this.prisma.user.findMany({
-          where: {
-            OR: filters.length ? filters : undefined, // If no filters, don't apply the OR condition
-          },
-        });
+    async getUserFilter(
+      name?: string,
+      diamond?: number,
+      coin?: number,
+      point?: number,
+      type?: string,
+      page: number = 1,
+      limit: number = 10
+    ) {
+      const filters = [];
+  
+      if (name) {
+        filters.push({ name: { contains: name } });
       }
+  
+      if (diamond) {
+        filters.push({ diamonds: diamond });
+      }
+  
+      if (coin) {
+        filters.push({ points: coin });
+      }
+  
+      if (point) {
+        filters.push({ totalPoints: point });
+      }
+  
+      if (type) {
+        filters.push({ type: type });
+      }
+  
+      const skip = (page - 1) * limit;
+  
+      const [users, total] = await Promise.all([
+        this.prisma.user.findMany({
+          where: {
+            OR: filters.length ? filters : undefined,
+          },
+          skip,
+          take: limit,
+        }),
+        this.prisma.user.count({
+          where: {
+            OR: filters.length ? filters : undefined,
+          },
+        }),
+      ]);
+  
+      const totalPages = Math.ceil(total / limit);
+  
+      return {
+        users,
+        meta: {
+          total,
+          page,
+          limit,
+          totalPages,
+        },
+      };
+    }
       
 
     //admin can create user

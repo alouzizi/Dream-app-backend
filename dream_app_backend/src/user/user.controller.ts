@@ -1,4 +1,4 @@
-import { Body, ConflictException, Controller, Delete, Get, HttpException, HttpStatus, InternalServerErrorException, Param, ParseIntPipe, Post, Req, Res, UnauthorizedException, UseGuards } from '@nestjs/common';
+import { Body, ConflictException, Controller, Delete, Get, HttpException, HttpStatus, InternalServerErrorException, Param, ParseIntPipe, Post, Query, Req, Res, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/swagger';
 import { UserService } from './user.service';
 import { RoleGuard, Roles, UserRoles } from 'src/role.guard';
@@ -129,23 +129,32 @@ export class UserController {
     @Roles(UserRoles.ADMIN)
     
     @Get("filter")
+    @UseGuards(JwtAuthGuard, RoleGuard)
+    @Roles(UserRoles.ADMIN)
+    @Get("filter")
+    @ApiOperation({ summary: 'Filter users with pagination' })   
     @ApiOperation({ summary: 'Filter users' })
     @ApiParam({ name: 'name', type: 'string', required: false })
     @ApiParam({ name: 'diamond', type: 'number', required: false })
     @ApiParam({ name: 'coin', type: 'number', required: false })
     @ApiParam({ name: 'point', type: 'number', required: false })
     @ApiParam({ name: 'type', type: 'string', required: false })
-    @ApiResponse({ status: 200, description: 'Returns filtered users.' })
+    @ApiParam({ name: 'page', type: 'number', required: false, description: 'Page number (default: 1)' })
+    @ApiParam({ name: 'limit', type: 'number', required: false, description: 'Items per page (default: 10)' })
+    @ApiResponse({ status: 200, description: 'Returns filtered users with pagination.' })
     @ApiResponse({ status: 401, description: 'Unauthorized.' })
     async getUserFilter(
-    @Param("name") name?: string,
-    @Param("diamond") diamond?: number,
-    @Param("coin") coin?: number,
-    @Param("point") point?: number,
-    @Param("type") type?: string
+      @Param('name') name?: string,
+      @Param('diamond') diamond?: number,
+      @Param('coin') coin?: number,
+      @Param('point') point?: number,
+      @Param('type') type?: string,
+      @Param('page') page: number = 1,
+      @Param('limit') limit: number = 10
     ) {
-        return this.userService.getUserFilter(name, diamond, coin, point,type);
+      return this.userService.getUserFilter(name, diamond, coin, point, type, page, limit);
     }
+  
 
     //admin can create user
     @UseGuards(JwtAuthGuard, RoleGuard)
