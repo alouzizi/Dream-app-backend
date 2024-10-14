@@ -110,4 +110,28 @@ export class AuthController {
     const id = req.user.id;
     return this.userService.updatePassword(id, body);
   }
+
+
+  //USER can delete his account
+  @UseGuards(JwtAuthGuard)
+  @Post("delete")
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Delete user account' })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'User account deleted successfully.',
+    schema: {
+      type: 'object',
+      properties: {
+        message: { type: 'string' },
+      },
+    },
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  async deleteUser(@Req() req: any ,@Body() body: any) {
+    const id = req.user.id;
+    
+    return this.userService.deleteUser(id,body);
+  }
+
 }

@@ -205,6 +205,23 @@ export class AuthService {
       },
     });
   }
+  
+
+  //delete user
+  async deleteUser(id: string,body:any) {
+    const { password } = body;
+    //check old password
+    const user = await this.prisma.user.findUnique({
+      where: { id: Number(id) },
+    });
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      throw new Error("Invalid password");
+    }
+    return this.prisma.user.delete({
+      where: { id: Number(id) },
+    });
+  }
 
     
 }
