@@ -46,15 +46,24 @@ export class DashboardService {
                 reports: {
                     none: {}
                 },
-                status: GameStatus.ENDED
+                status: {
+                    in: [GameStatus.ENDED, GameStatus.CLOSED]
+                }
                 
             },
             include: {
                 winners: {
                     select: {
                         rank: true
+                        
                     }
                   },
+                userGames: {
+                    select: {
+                        userId: true,
+                        gameId: true
+                    }
+                },
                 sponsorId: true
             }
         });
@@ -127,14 +136,16 @@ export class DashboardService {
     async getEndedGamesWithoutReports() {
       return await this.prisma.games.findMany({
         where: {
-          status: GameStatus.ENDED,
+          status: {
+            in: [GameStatus.ENDED, GameStatus.CLOSED],  // Matches either 'ENDED' or 'CLOSED' status
+          },
           reports: {
             none: {}
           }
         },
         include: {
           winners: true,
-          // sponsorId: true
+          sponsorId: true
         }
       });
     }
