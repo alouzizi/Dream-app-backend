@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotAcceptableException } from '@nestjs/common';
 import { GameStatus, PrismaClient } from '@prisma/client';
 import { CreateReportDto } from 'src/dto/create-raports.dto';
 import * as fs from 'fs';
@@ -169,20 +169,130 @@ export class DashboardService {
       });
     }
 
-    //create raport
+    // //create raport
+    // async createReport(createReportDto: CreateReportDto) {
+    //     //check if the game exists
+    //     const game = await this.prisma.games.findUnique({
+    //         where: {
+    //             id: createReportDto.gameId
+    //         }
+    //     });
+    //     if (!game) {
+    //         throw new NotAcceptableException('Game does not exist');
+    //     }
+    //     //check if game already has a report
+    //     const existingReport = await this.prisma.report.findFirst({
+    //         where: {
+    //             gameId: createReportDto.gameId
+    //         }
+    //     });
+    //     if (existingReport) {
+    //         throw new NotAcceptableException('Game already has a report');
+    //     }
+    //     //check if game is ended or closed
+    //     if (game.status !== GameStatus.ENDED && game.status !== GameStatus.CLOSED) {
+    //         throw new NotAcceptableException('Game is not ended or closed');
+    //     }
+      
+    //     try {
+    //       const report = await this.prisma.report.create({
+    //         data: {
+    //             ...createReportDto,
+    //             reportDate: new Date(createReportDto.reportDate),
+    //         },
+    //       });
+    //       return report;
+    //     } catch (error) {
+    //       throw new Error(`Failed to create report: ${error.message}`);
+    //     }
+    // }
     async createReport(createReportDto: CreateReportDto) {
-        try {
-          const report = await this.prisma.report.create({
-            data: {
-                ...createReportDto,
-                reportDate: new Date(createReportDto.reportDate),
-            },
-          });
-          return report;
-        } catch (error) {
-          throw new Error(`Failed to create report: ${error.message}`);
+      // Check if the game exists
+      const game = await this.prisma.games.findUnique({
+          where: {
+              id: createReportDto.gameId
+          },
+          include: {
+              sponsorId: true, // Include sponsor information
+          }
+      });
+  
+      if (!game) {
+          throw new NotAcceptableException('Game does not exist');
+      }
+  
+      // ... (previous checks remain the same)
+           //check if game already has a report
+        const existingReport = await this.prisma.report.findFirst({
+            where: {
+                gameId: createReportDto.gameId
+            }
+        });
+        if (existingReport) {
+            throw new NotAcceptableException('Game already has a report');
         }
-    }
+        //check if game is ended or closed
+        if (game.status !== GameStatus.ENDED && game.status !== GameStatus.CLOSED) {
+            throw new NotAcceptableException('Game is not ended or closed');
+        }
+  
+        try {
+          // Create the report
+          const report = await this.prisma.report.create({
+              data: {
+                  userId: createReportDto.userId,
+                  gameId: createReportDto.gameId,
+                  trophyType: createReportDto.trophyType,
+                  expenses: createReportDto.expenses,
+                  additionalExpenses: createReportDto.additionalExpenses,
+                  amount: createReportDto.amount,
+                  reportDate: new Date(createReportDto.reportDate),
+                  hasTrophy: createReportDto.hasTrophy,
+                  sponsors: {
+                      connect: createReportDto.sponsorsId.map(id => ({ id }))
+                  }
+              },
+              include: {
+                  sponsors: true,
+                  user: {
+                      select: {
+                          name: true,
+                          avatar: true,
+                      }
+                  },
+                  game: {
+                      select: {
+                          name: true,
+                      }
+                  }
+              }
+          });
+  
+          // Prepare the response
+          const response = {
+              report: {
+                  ...report,
+                  sponsors: report.sponsors.map(sponsor => ({
+                      id: sponsor.id,
+                      name: sponsor.name,
+                      logo: sponsor.logo,
+                      status: sponsor.status
+                  }))
+              },
+              game: {
+                  name: report.game.name,
+              },
+              user: {
+                  name: report.user.name,
+                  avatar: report.user.avatar,
+              }
+          };
+  
+          return response;
+      } catch (error) {
+          throw new Error(`Failed to create report: ${error.message}`);
+      }
+  }
 
     //update report
     async updateReport(id: string, createReportDto: CreateReportDto) {

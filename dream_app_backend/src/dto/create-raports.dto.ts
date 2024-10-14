@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsInt, IsString, IsDecimal, IsBoolean, IsDate } from 'class-validator';
+import { IsNotEmpty, IsInt, IsString, IsDecimal, IsBoolean, IsDate, IsArray } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -20,8 +20,8 @@ export class CreateReportDto {
 
   @ApiProperty()
   @IsNotEmpty()
-  @IsInt()
-  sponsorsId: number;
+  @IsArray()
+  sponsorsId: number[];
 
 
   @ApiProperty()
@@ -54,7 +54,7 @@ export class ReportDto {
   userId: number;
   gameId: number;
   trophyType: string;
-  sponsorsId: number;
+  sponsorsId: number[];
   expenses: number;
   additionalExpenses: number;
   amount: number;

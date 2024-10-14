@@ -106,6 +106,7 @@ model Sponsor {
   logo   String
   status SponsorStatus
   games  Games[]
+  reports Report[]
   // description String
   // website     String
 }
@@ -162,7 +163,6 @@ model Report {
   userId              Int
   gameId              Int
   trophyType          String
-  sponsorsId          Int
   expenses            Decimal
   additionalExpenses  Decimal
   amount              Decimal
@@ -171,5 +171,6 @@ model Report {
   createdAt           DateTime @default(now())
 
   user     User   @relation(fields: [userId], references: [id])
-  game     Games   @relation(fields: [gameId], references: [id])
+  game     Games  @relation(fields: [gameId], references: [id])
+  sponsors Sponsor[] // Many-to-many relation with Sponsor
 }
