@@ -10,13 +10,30 @@ export class GameService {
 
 
 async createGame(createGameDto: CreateGameDto) {
+
+	const now = new Date();
+	let status: GameStatus;
+
+	const startDate = new Date(createGameDto.startDate);
+	const endDate = new Date(createGameDto.endDate);
+
+	if (now < startDate) {
+	  status = GameStatus.PENDING;
+	} else if (now >= startDate && now <= endDate) {
+	  status = GameStatus.STARTED;
+	} else {
+	  status = GameStatus.ENDED;
+	}
+
     return await this.prisma.games.create({
       data: {
         name: createGameDto.name,
 		requiredDiamonds: createGameDto.requiredDiamonds,
 		duration: createGameDto.duration,
 		reward: createGameDto.reward,
-		status: GameStatus.CREATED,
+		status: status,
+		startDate: createGameDto.startDate,
+		endDate: createGameDto.endDate,
 		sponsorId: createGameDto.sponsorId.length > 0 ? {
 			connect: createGameDto.sponsorId .map(id => ({ id })),
 		  } : undefined,

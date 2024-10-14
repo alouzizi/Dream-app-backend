@@ -14,7 +14,7 @@ enum UserRoles {
 }
 
 enum GameStatus {
-  CREATED
+  PENDING
   STARTED
   ENDED
   CLOSED

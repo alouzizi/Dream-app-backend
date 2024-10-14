@@ -1,50 +1,7 @@
-// // src/games/dto/create-game.dto.ts
-// import { IsInt, IsArray, IsString, IsEnum, IsOptional } from 'class-validator';
-// import { GameStatus } from 'prisma/prisma-client';
 
-// export class CreateGameDto {
-//   @IsInt()
-//   requiredDiamonds: number;
-
-//   @IsInt()
-//   duration: number;
- 
-//   @IsString()
-//   reward: string;
-
-//   @IsArray()
-//   @IsString({ each: true })
-//   trophyTypes: string[];
-
-//   @IsEnum(GameStatus)
-//   status: GameStatus;
-  
-//   @IsArray()
-//   @IsInt({ each: true })
-//   sponsorIds: number[];
-  
-//   // @IsOptional()
-//   @IsString()
-//   images?: string;
-
-//   @IsOptional()
-//   @IsString()
-//   options?: string;
-
-//   @IsOptional()
-//   @IsString()
-//   licenseId?: string; // Optional field for license ID
-
-//   @IsOptional()
-//   @IsInt()
-//   winnerId?: number; // Optional field for the winner's ID
-// }
-
-
-
-// src/games/dto/create-game.dto.ts
-import { IsInt, IsArray, IsString, IsEnum, IsOptional } from 'class-validator';
+import { IsInt, IsArray, IsString, IsEnum, IsOptional, IsDate } from 'class-validator';
 import { GameStatus } from 'prisma/prisma-client';
+import { Type } from 'class-transformer';
 
 export class CreateGameDto {
   @IsString() // New field for game name
@@ -62,17 +19,24 @@ export class CreateGameDto {
   @IsArray()
   @IsString({ each: true })
   trophyTypes: string[];
-
-  @IsEnum(GameStatus)
-  status: GameStatus;
   
   @IsArray()
   @IsInt({ each: true })
   sponsorId: number[] = [];
+
+
+  @Type(() => Date) 
+  @IsDate()
+  startDate: Date;
+
+  @Type(() => Date)
+  @IsDate()
+  endDate: Date;
   
   @IsOptional()
   @IsString()
   images?: string;
+
 
   @IsOptional()
   @IsString()
