@@ -395,7 +395,7 @@ export class DashboardService {
     }
 
 
-
+  
     async generateReportsPDF(): Promise<Buffer> {
       const reports = await this.prisma.report.findMany({
           include: {
@@ -425,94 +425,119 @@ export class DashboardService {
       });
   }
 
-  private generateHeader(doc: PDFKit.PDFDocument, marginTop = 50) {
-    try {
-        doc.image('./assets/logo.png', 50, marginTop, { width: 50 });
-    } catch (error) {
-        console.warn('Logo image not found, skipping logo.');
-    }
+  private generateHeader(doc: PDFKit.PDFDocument) {
+      try {
+          doc.image('./assets/logo.png', 50, 45, { width: 50 });
+      } catch (error) {
+          console.warn('Logo image not found, skipping logo.');
+      }
 
-    doc
-        .fillColor('#444444')
-        .fontSize(24)
-        .text('Reports Summary', 110, marginTop + 7)  // Adjusted for top margin
-        .fontSize(12)
-        .text('Generated on: ' + new Date().toLocaleString(), { align: 'right' })
-        .moveDown();
-}
+      doc
+          .fillColor('#444444')
+          .fontSize(20)
+          .text('Reports Summary', 110, 50)
+          .fontSize(10)
+          .text('Generated on: ' + new Date().toLocaleString(), 110, 70)
+          .moveDown();
+  }
 
-private generateFooter(doc: PDFKit.PDFDocument, marginBottom = 100) {
-    const pageCount = doc.bufferedPageRange().count;
-    for (let i = 0; i < pageCount; i++) {
-        doc.switchToPage(i);
-        doc.fontSize(8).text(
-            `Page ${i + 1} of ${pageCount}`,
-            50,
-            doc.page.height - marginBottom,  // Adjusted for bottom margin
-            { align: 'center' }
-        );
-    }
-}
+  private generateFooter(doc: PDFKit.PDFDocument) {
+      const pageCount = doc.bufferedPageRange().count;
+      for (let i = 0; i < pageCount; i++) {
+          doc.switchToPage(i);
+          doc.fillColor('#444444')
+             .fontSize(10)
+             .text(
+                 `Page ${i + 1} of ${pageCount}`,
+                 0,
+                 doc.page.height - 50,
+                 { align: 'center' }
+             );
+      }
+  }
 
-private generateReportTable(doc: PDFKit.PDFDocument, reports: any[], marginTop = 100, marginBottom = 50) {
-    const tableTop = marginTop + 100;  // Adjusted for top margin
-    const columns = [
-        { header: 'User', width: 100 },
-        { header: 'Game', width: 80 },
-        { header: 'Trophy', width: 100 },
-        { header: 'Expense of Prize', width: 80 },
-        { header: 'Additional Expense', width: 100 },
-        { header: 'Amount', width: 80 },
-        { header: 'Date', width: 100 },
-    ];
+  private generateReportTable(doc: PDFKit.PDFDocument, reports: any[]) {
+      const tableTop = 100;
+      const tableWidth = doc.page.width - 100; // 50px margin on each side
+      const columns = [
+          { header: 'User', width: tableWidth * 0.15 },
+          { header: 'Game', width: tableWidth * 0.10 },
+          { header: 'Trophy', width: tableWidth * 0.15 },
+          { header: 'Expense of Prize', width: tableWidth * 0.15 },
+          { header: 'Additional Expense', width: tableWidth * 0.15 },
+          { header: 'Amount', width: tableWidth * 0.15 },
+          { header: 'Date', width: tableWidth * 0.15 },
+      ];
 
-    this.generateTableRow(doc, tableTop, columns.map(col => col.header), columns.map(col => col.width), true);
+      this.generateTableRow(doc, tableTop, columns.map(col => col.header), columns.map(col => col.width), true);
 
-    let rowTop = tableTop + 25;
+      let rowTop = tableTop + 20;
 
-    reports.forEach((report, index) => {
-        const row = [
-            report.user.name,
-            `Game #${report.game.id}`,
-            report.trophyType,
-            `$${report.expenses.toFixed(2)}`,
-            `$${report.additionalExpenses.toFixed(2)}`,
-            `$${report.amount.toFixed(2)}`,
-            new Date(report.reportDate).toLocaleDateString(),
-        ];
+      reports.forEach((report, index) => {
+          const row = [
+              report.user.name,
+              `Game #${report.game.id}`,
+              report.trophyType,
+              `$${report.expenses.toFixed(2)}`,
+              `$${report.additionalExpenses.toFixed(2)}`,
+              `$${report.amount.toFixed(2)}`,
+              new Date(report.reportDate).toLocaleDateString(),
+          ];
 
-        const isEvenRow = index % 2 === 0;
-        if (isEvenRow) {
-            doc.rect(50, rowTop - 5, 670, 20).fill('#f2f2f2').stroke();
-        }
+          if (rowTop + 20 > doc.page.height - 50) {
+              doc.addPage();
+              rowTop = 50;
+              this.generateTableRow(doc, rowTop, columns.map(col => col.header), columns.map(col => col.width), true);
+              rowTop += 20;
+          }
 
-        this.generateTableRow(doc, rowTop, row, columns.map(col => col.width));
-        rowTop += 20;
+          const isEvenRow = index % 2 === 0;
+          if (isEvenRow) {
+              doc.rect(50, rowTop, tableWidth, 20).fill('#f2f2f2');
+          }
 
-        // Adjust for bottom margin: make sure the row doesn't go into the bottom margin
-        if (rowTop > doc.page.height - marginBottom - 20) {  // 20 is for row height
-            doc.addPage();
-            this.generateTableRow(doc, marginTop, columns.map(col => col.header), columns.map(col => col.width), true);
-            rowTop = marginTop + 25;
-        }
-    });
-}
+          this.generateTableRow(doc, rowTop, row, columns.map(col => col.width));
+          rowTop += 20;
+      });
+  }
 
   private generateTableRow(doc: PDFKit.PDFDocument, y: number, items: string[], widths: number[], isHeader = false) {
-    let x = 50;
-    items.forEach((item, i) => {
-        doc
-            .fillColor('gray')  // Set the text color to red
-            .fontSize(isHeader ? 12 : 10)
-            .font(isHeader ? 'Helvetica-Bold' : 'Helvetica')
-            .text(item, x, y, {
-                width: widths[i],
-                align: 'left',
-                ellipsis: true,
-            });
-        x += widths[i] + 10;
-    });
-}
+      let x = 50;
+      doc.fillColor(isHeader ? '#000000' : '#444444')
+         .fontSize(isHeader ? 10 : 8)
+         .font(isHeader ? 'Helvetica-Bold' : 'Helvetica');
+
+      items.forEach((item, i) => {
+          doc.text(this.truncateText(doc, item, widths[i] - 6), x + 3, y + 5, {
+              width: widths[i] - 6,
+              height: 20,
+              align: 'left',
+          });
+          
+          // Draw cell borders
+          doc.rect(x, y, widths[i], 20).stroke();
+          
+          x += widths[i];
+      });
+  }
+
+  private truncateText(doc: PDFKit.PDFDocument, text: string, width: number): string {
+      const ellipsis = '...';
+      let textWidth = doc.widthOfString(text);
+      let truncated = text;
+      
+      if (textWidth <= width) {
+          return truncated;
+      }
+      
+      while (textWidth > width) {
+          truncated = truncated.slice(0, -1);
+          textWidth = doc.widthOfString(truncated + ellipsis);
+      }
+      
+      return truncated + ellipsis;
+  }
+  
 
       
 }
