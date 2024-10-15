@@ -5,7 +5,7 @@ import { JwtAuthGuard } from 'src/jwt-auth.guard';
 import { RoleGuard, Roles, UserRoles } from 'src/role.guard';
 
 
-@UseGuards(JwtAuthGuard, RoleGuard)
+// @UseGuards(JwtAuthGuard, RoleGuard)
 
 @Controller('game')
 export class GameController {
@@ -20,7 +20,7 @@ export class GameController {
   @Get(':id')
   async getGame(@Param('id') id: string) {
     // const gameId = parseInt(id);
-    return this.gameService.getGameById(+ id);
+    return this.gameService.getGameById(+id);
   }
 
   //get games by mobile app user the games have status created and just name of game and required diamonds and duration and reward

@@ -1,52 +1,62 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { GameStatus, PrismaClient } from 'prisma/prisma-client';
-import { CreateGameDto } from './dto/game.dto';
-
+import { Injectable, NotFoundException } from "@nestjs/common";
+import { GameStatus, PrismaClient } from "prisma/prisma-client";
+import { CreateGameDto } from "./dto/game.dto";
+import { NotificationService } from "../notification/notification.service";
+import { SchedulerRegistry } from "@nestjs/schedule";
 
 @Injectable()
 export class GameService {
+  private prisma = new PrismaClient();
 
-	private prisma = new PrismaClient();
+  constructor(
+    private readonly notificationService: NotificationService,
+    private readonly schedulerRegistry: SchedulerRegistry
+  ) {}
 
+  async createGame(createGameDto: CreateGameDto) {
+    const now = new Date();
+    let status: GameStatus;
 
-async createGame(createGameDto: CreateGameDto) {
+    const startDate = new Date(createGameDto.startDate);
+    const endDate = new Date(createGameDto.endDate);
 
-	const now = new Date();
-	let status: GameStatus;
+    console.log("now", now);
+    console.log("startDate", startDate);
+    console.log("endDate", endDate);
 
-	const startDate = new Date(createGameDto.startDate);
-	const endDate = new Date(createGameDto.endDate);
+    if (now < startDate) {
+      status = GameStatus.PENDING;
+    } else if (now >= startDate && now <= endDate) {
+      status = GameStatus.STARTED;
+    } else {
+      status = GameStatus.ENDED;
+    }
 
-	if (now < startDate) {
-	  status = GameStatus.PENDING;
-	} else if (now >= startDate && now <= endDate) {
-	  status = GameStatus.STARTED;
-	} else {
-	  status = GameStatus.ENDED;
-	}
-
-    return await this.prisma.games.create({
+    const game = await this.prisma.games.create({
       data: {
         name: createGameDto.name,
-		requiredDiamonds: createGameDto.requiredDiamonds,
-		duration: createGameDto.duration,
-		reward: createGameDto.reward,
-		status: status,
-		startDate: createGameDto.startDate,
-		endDate: createGameDto.endDate,
-		sponsorId: createGameDto.sponsorId.length > 0 ? {
-			connect: createGameDto.sponsorId .map(id => ({ id })),
-		  } : undefined,
+        requiredDiamonds: createGameDto.requiredDiamonds,
+        duration: createGameDto.duration,
+        reward: createGameDto.reward,
+        status: status,
+        startDate: createGameDto.startDate,
+        endDate: createGameDto.endDate,
+        sponsorId:
+          createGameDto.sponsorId.length > 0
+            ? {
+                connect: createGameDto.sponsorId.map((id) => ({ id })),
+              }
+            : undefined,
         images: createGameDto.images,
         options: createGameDto.options,
         licenseId: createGameDto.licenseId,
         winnerId: createGameDto.winnerId,
         questions: {
-          create: createGameDto.questions.map(question => ({
+          create: createGameDto.questions.map((question) => ({
             question: question.question,
-			maxTime: question.maxTime,
+            maxTime: question.maxTime,
             options: {
-              create: question.options.map(option => ({
+              create: question.options.map((option) => ({
                 optionText: option.optionText,
                 isCorrect: option.isCorrect,
               })),
@@ -55,25 +65,82 @@ async createGame(createGameDto: CreateGameDto) {
         },
       },
     });
+
+    this.scheduleGameNotifications(game.id, startDate, endDate);
+    return game;
   }
 
-    // Method to get a game by ID
-	async getGameById(gameId: number) {
-		const game = await this.prisma.games.findUnique({
-		  where: { id: gameId },
-		  include: {
-			questions: {
-			  include: {
-				options: true,
-			  },
-			},
-		  },
-		});
-	
-		if (!game) {
-		  throw new NotFoundException(`Game with ID ${gameId} not found.`);
-		}
-		return game;
-	  }
+  private scheduleGameNotifications(
+    gameId: number,
+    startDate: Date,
+    endDate: Date
+  ) {
+    const startTimeout = startDate.getTime() - Date.now();
+    const endTimeout = endDate.getTime() - Date.now();
 
+    if (startTimeout > 0) {
+      const startHandle = setTimeout(async () => {
+        await this.startGame(gameId);
+      }, startTimeout);
+      this.schedulerRegistry.addTimeout(`start-game-${gameId}`, startHandle);
+    }
+
+    if (endTimeout > 0) {
+      const endHandle = setTimeout(async () => {
+        await this.endGame(gameId);
+      }, endTimeout);
+      this.schedulerRegistry.addTimeout(`end-game-${gameId}`, endHandle);
+    }
+  }
+
+  async startGame(gameId: number) {
+    console.log("startGame");
+    const game = await this.prisma.games.findUnique({ where: { id: gameId } });
+    if (!game) {
+      throw new NotFoundException(`Game with ID ${gameId} not found.`);
+    }
+
+    await this.prisma.games.update({
+      where: { id: gameId },
+      data: { status: GameStatus.STARTED },
+    });
+
+    const message = `Game ${gameId} has started!`;
+    await this.notificationService.broadcastNotification(message);
+  }
+
+  async endGame(gameId: number) {
+    console.log("endGame");
+    const game = await this.prisma.games.findUnique({ where: { id: gameId } });
+    if (!game) {
+      throw new NotFoundException(`Game with ID ${gameId} not found.`);
+    }
+
+    await this.prisma.games.update({
+      where: { id: gameId },
+      data: { status: GameStatus.ENDED },
+    });
+
+    const message = `Game ${gameId} has ended!`;
+    await this.notificationService.broadcastNotification(message);
+  }
+
+  // Method to get a game by ID
+  async getGameById(gameId: number) {
+    const game = await this.prisma.games.findUnique({
+      where: { id: gameId },
+      include: {
+        questions: {
+          include: {
+            options: true,
+          },
+        },
+      },
+    });
+
+    if (!game) {
+      throw new NotFoundException(`Game with ID ${gameId} not found.`);
+    }
+    return game;
+  }
 }
