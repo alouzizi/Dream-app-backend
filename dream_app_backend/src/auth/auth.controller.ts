@@ -1,9 +1,9 @@
 import { ApiBearerAuth, ApiTags, ApiOperation, ApiResponse, ApiBody, ApiProperty, ApiConsumes } from '@nestjs/swagger';
-import { Body, Controller, Get, Param, Post, Req, UploadedFile, UseGuards, UseInterceptors } from "@nestjs/common";
+import { Body, Controller, Get, Param, Post, Req,Res, UploadedFile, UseGuards, UseInterceptors } from "@nestjs/common";
 import { AuthService } from "./auth.service";
 import { CreateUserDto } from '../dto/create-user.dto';
 import { JwtAuthGuard } from "src/jwt-auth.guard";
-import { Request } from 'express';
+import { Request ,Response} from 'express';
 import { LoginDto } from "src/dto/login-validator.dto";
 import { GoogleDto } from "src/dto/google-validator.dto";
 
@@ -133,5 +133,29 @@ export class AuthController {
     
     return this.userService.deleteUser(id,body);
   }
+
+  //admin login
+  @Post("admin/login")
+  @ApiOperation({ summary: 'Admin login' })
+  @ApiBody({ type: LoginDto })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Admin successfully logged in.',
+    type: LoginResponseDto
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  async adminLogin(@Body() loginUserDto: LoginDto, @Res({ passthrough: true }) response: Response) {
+    const { user, token } = await this.userService.adminLogin(loginUserDto);
+    
+    // Set the JWT as an HTTP-only cookie
+    response.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
+      sameSite: 'strict', // Protect against CSRF
+      maxAge: 3600000, // 1 hour in milliseconds
+    });
+    return { message: "Login successful", user };
+  }
+
 
 }

@@ -9,6 +9,7 @@ import * as path from 'path';
 
 @Injectable()
 export class AuthService {
+  jwtService: any;
   constructor(private prisma: PrismaClient) {}
 
   async register(createUserDto: CreateUserDto,avatar: Express.Multer.File) {
@@ -223,5 +224,44 @@ export class AuthService {
     });
   }
 
+
+  //admin login
+  async adminLogin(loginUserDto: any) {
+    const { email, password } = loginUserDto;
+  
+    try {
+      // Find the user by email
+      const user = await this.prisma.user.findUnique({
+        where: { email },
+      });
+  
+      // Check if the user exists
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+  
+      // Validate the password
+      const isPasswordValid = await bcrypt.compare(password, user.password);
+  
+      if (isPasswordValid && user.role === UserRoles.ADMIN) {
+        const payload = { email: user.email, sub: user.id, role: user.role };
+        const token = jwt.sign(payload, jwtConstants.secret, { expiresIn: "1h" });
+  
+        return {
+          user: {
+            id: user.id,
+            email: user.email,
+            role: user.role,
+          },
+          token,
+        };
+      }
+  
+      // If password is incorrect
+      throw new UnauthorizedException('Invalid credentials');
+    } catch (error) {
+      throw error; // Re-throw any caught exception so it returns the correct status
+    }
+  }
     
 }
