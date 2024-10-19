@@ -7,7 +7,9 @@ export class CreateSponsorDto {
   name: string;
 
   @IsString()
-  logo: string;
+  @IsOptional()
+  @IsOptional()
+  logo?: string;
 
   @IsEnum(SponsorStatus)
   status: SponsorStatus;
@@ -19,7 +21,6 @@ export class UpdateSponsorDto {
   name?: string; // Optional field
 
   @IsOptional()
-  @IsString()
   logo?: string; // Optional field
 
   @IsOptional()

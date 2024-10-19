@@ -17,7 +17,7 @@ export class SponsorService {
   }
 
   // Create a new sponsor
-  async create(data: { name: string; logo: string; status: SponsorStatus }) {
+  async create(data: { name: string; logo?: string; status: SponsorStatus }) {
     return this.prisma.sponsor.create({ data });
   }
 

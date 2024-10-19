@@ -103,7 +103,7 @@ model UserGames {
 model Sponsor {
   id     Int     @id @default(autoincrement())
   name   String
-  logo   String
+  logo   String?
   status SponsorStatus
   games  Games[]
   reports Report[]
