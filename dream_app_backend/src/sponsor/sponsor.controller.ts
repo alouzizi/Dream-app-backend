@@ -23,8 +23,8 @@ import { FileInterceptor } from "@nestjs/platform-express";
 import * as path from "path";
 import * as fs from "fs";
 
-// @UseGuards(JwtAuthGuard, RoleGuard)
-// @Roles(UserRoles.ADMIN)
+@UseGuards(JwtAuthGuard, RoleGuard)
+@Roles(UserRoles.ADMIN)
 @Controller("sponsor")
 export class SponsorController {
   constructor(private readonly sponsorService: SponsorService) {}
