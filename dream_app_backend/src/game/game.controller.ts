@@ -1,7 +1,6 @@
 import { Controller, Post, Body, Get, Param, UseGuards } from '@nestjs/common';
 import { GameService } from './game.service';
 import { CreateGameDto } from './dto/game.dto';
-import { JwtAuthGuard } from 'src/jwt-auth.guard';
 import { RoleGuard, Roles, UserRoles } from 'src/role.guard';
 
 

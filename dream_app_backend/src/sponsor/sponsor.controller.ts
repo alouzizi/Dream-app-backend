@@ -18,12 +18,13 @@ import { CreateSponsorDto } from "./sponsor.dto";
 import { UpdateSponsorDto } from "./sponsor.dto";
 import { SponsorStatus } from "@prisma/client";
 import { RoleGuard, Roles, UserRoles } from "src/role.guard";
-import { JwtAuthGuard } from "src/jwt-auth.guard";
+
 import { FileInterceptor } from "@nestjs/platform-express";
 import * as path from "path";
 import * as fs from "fs";
+import { CombinedJwtAuthGuard } from "src/user-auth.guard";
 
-@UseGuards(JwtAuthGuard, RoleGuard)
+@UseGuards( CombinedJwtAuthGuard, RoleGuard)
 @Roles(UserRoles.ADMIN)
 @Controller("sponsor")
 export class SponsorController {

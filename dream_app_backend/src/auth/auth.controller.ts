@@ -2,7 +2,6 @@ import { ApiBearerAuth, ApiTags, ApiOperation, ApiResponse, ApiBody, ApiProperty
 import { Body, Controller, Get, HttpException, HttpStatus, Param, Post, Req,Res, UploadedFile, UseGuards, UseInterceptors } from "@nestjs/common";
 import { AuthService } from "./auth.service";
 import { CreateUserDto } from '../dto/create-user.dto';
-import { JwtAuthGuard } from "src/jwt-auth.guard";
 import { Request ,Response} from 'express';
 import { LoginDto } from "src/dto/login-validator.dto";
 import { GoogleDto } from "src/dto/google-validator.dto";
@@ -10,6 +9,7 @@ import { GoogleDto } from "src/dto/google-validator.dto";
 // Response DTOs (you'll need to create these)
 import { UserResponseDto, LoginResponseDto,GoogleAuthResponseDto, UpdateResponseDto,RegisterResponseDto } from '../dto/user-response.dto';
 import { FileInterceptor } from '@nestjs/platform-express/multer';
+import { CombinedJwtAuthGuard } from 'src/user-auth.guard';
 
 
 class FileUploadDto {
@@ -64,7 +64,7 @@ export class AuthController {
     return this.userService.isgoogleAuth(loginUserDto);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards( CombinedJwtAuthGuard)
   @Post("update")
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update user information' })
@@ -96,7 +96,7 @@ export class AuthController {
     return this.userService.updateUser(id, createUserDto, avatar);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards( CombinedJwtAuthGuard)
   @Post("updatePassword")
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update user password' })
@@ -127,7 +127,7 @@ export class AuthController {
 
 
   //USER can delete his account
-  @UseGuards(JwtAuthGuard)
+  @UseGuards( CombinedJwtAuthGuard)
   @Post("delete")
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete user account' })
@@ -166,7 +166,7 @@ export class AuthController {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
       sameSite: 'strict', // Protect against CSRF
-      maxAge: 3600000, // 1 hour in milliseconds
+      // maxAge: 3600000, // 1 hour in milliseconds
     });
     return { message: "Login successful", user };
   }

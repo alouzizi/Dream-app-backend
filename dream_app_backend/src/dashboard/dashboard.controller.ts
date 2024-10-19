@@ -3,10 +3,11 @@ import { Body, Controller, Get, Post, Res, UseGuards, Param } from '@nestjs/comm
 import { DashboardService } from './dashboard.service';
 import { PrismaClient } from '@prisma/client';
 import { RoleGuard, Roles, UserRoles } from 'src/role.guard';
-import { JwtAuthGuard } from 'src/jwt-auth.guard';
+
 import { CreateReportDto } from 'src/dto/create-raports.dto';
 import { Response } from 'express';
 import * as fs from 'fs';
+import { CombinedJwtAuthGuard } from 'src/user-auth.guard';
 
 @ApiTags('Dashboard')
 @ApiBearerAuth()
@@ -17,7 +18,7 @@ export class DashboardController {
         private readonly prismaService: PrismaClient
     ) {}
 
-    @UseGuards(JwtAuthGuard, RoleGuard)
+    @UseGuards( CombinedJwtAuthGuard, RoleGuard)
     @Roles(UserRoles.ADMIN)
     @Get('leaderboard')
     @ApiOperation({ summary: 'Get leaderboard' })
@@ -27,7 +28,7 @@ export class DashboardController {
         return this.dashboardService.getFormattedLeaderboard();
     }
 
-    @UseGuards(JwtAuthGuard, RoleGuard)
+    @UseGuards( CombinedJwtAuthGuard, RoleGuard)
     @Roles(UserRoles.ADMIN)
     @Get('allGames')
     @ApiOperation({ summary: 'Get all games' })
@@ -37,7 +38,7 @@ export class DashboardController {
         return this.dashboardService.getAllGames();
     }
 
-    @UseGuards(JwtAuthGuard, RoleGuard)
+    @UseGuards( CombinedJwtAuthGuard, RoleGuard)
     @Roles(UserRoles.ADMIN)
     @Post('updatePoints/:id')
     @ApiOperation({ summary: 'Update user points' })
@@ -49,7 +50,7 @@ export class DashboardController {
         return this.dashboardService.updateUserPoints(id, points);
     }
 
-    @UseGuards(JwtAuthGuard, RoleGuard)
+    @UseGuards( CombinedJwtAuthGuard, RoleGuard)
     @Roles(UserRoles.ADMIN)
     @Post('createReport')
     @ApiOperation({ summary: 'Create a report' })
@@ -60,7 +61,7 @@ export class DashboardController {
         return this.dashboardService.createReport(createReportDto);
     }
 
-    @UseGuards(JwtAuthGuard, RoleGuard)
+    @UseGuards( CombinedJwtAuthGuard, RoleGuard)
     @Roles(UserRoles.ADMIN)
     @Post('updateReport/:id')
     @ApiOperation({ summary: 'Update a report' })
@@ -72,7 +73,7 @@ export class DashboardController {
         return this.dashboardService.updateReport(id, createReportDto);
     }
 
-    @UseGuards(JwtAuthGuard, RoleGuard)
+    @UseGuards( CombinedJwtAuthGuard, RoleGuard)
     @Roles(UserRoles.ADMIN)
     @Get('allReports')
     @ApiOperation({ summary: 'Get all reports' })
@@ -82,7 +83,7 @@ export class DashboardController {
         return this.dashboardService.getAllReports();
     }
 
-    @UseGuards(JwtAuthGuard, RoleGuard)
+    @UseGuards( CombinedJwtAuthGuard, RoleGuard)
     @Roles(UserRoles.ADMIN)
     @Get('topThreeWinners/:gameId')
     @ApiOperation({ summary: 'Get top three winners for a game' })
@@ -93,7 +94,7 @@ export class DashboardController {
         return this.dashboardService.getTopThreeWinners(gameId);
     }
 
-    @UseGuards(JwtAuthGuard, RoleGuard)
+    @UseGuards( CombinedJwtAuthGuard, RoleGuard)
     @Roles(UserRoles.ADMIN)
     @Get('endedGames')
     @ApiOperation({ summary: 'Get ended games' })
@@ -103,7 +104,7 @@ export class DashboardController {
         return this.dashboardService.getEndedGames();
     }
 
-    @UseGuards(JwtAuthGuard, RoleGuard)
+    @UseGuards( CombinedJwtAuthGuard, RoleGuard)
     @Roles(UserRoles.ADMIN)
     @Get('endedGamesWithoutReports')
     @ApiOperation({ summary: 'Get ended games without reports' })
@@ -113,7 +114,7 @@ export class DashboardController {
         return this.dashboardService.getEndedGamesWithoutReports();
     }
 
-    @UseGuards(JwtAuthGuard, RoleGuard)
+    @UseGuards( CombinedJwtAuthGuard, RoleGuard)
     @Roles(UserRoles.ADMIN)
     @Get('generate-pdf')
     @ApiOperation({ summary: 'Generate PDF report' })
@@ -137,7 +138,7 @@ export class DashboardController {
     }
     
 
-    @UseGuards(JwtAuthGuard, RoleGuard)
+    @UseGuards( CombinedJwtAuthGuard, RoleGuard)
     @Roles(UserRoles.ADMIN)
     @Get('unreportedGames')
     @ApiOperation({ summary: 'Get unreported games' })

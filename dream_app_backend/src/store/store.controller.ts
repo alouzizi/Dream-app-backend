@@ -1,11 +1,12 @@
 import { Controller, Get, Post, Body, Param, Patch, Delete, UseGuards } from '@nestjs/common';
 import { StoreService } from './store.service';
 import { CreateStoreDto } from './store.dto';
-import { JwtAuthGuard } from 'src/jwt-auth.guard';
+
 import { RoleGuard, Roles, UserRoles } from 'src/role.guard';
+import { CombinedJwtAuthGuard } from 'src/user-auth.guard';
 
 
-@UseGuards(JwtAuthGuard, RoleGuard)
+@UseGuards( CombinedJwtAuthGuard, RoleGuard)
 
 @Controller('store')
 export class StoreController {

@@ -2,9 +2,10 @@ import { Body, ConflictException, Controller, Delete, Get, HttpException, HttpSt
 import { ApiBearerAuth, ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/swagger';
 import { UserService } from './user.service';
 import { RoleGuard, Roles, UserRoles } from 'src/role.guard';
-import { JwtAuthGuard } from 'src/jwt-auth.guard';
 import { log } from 'console';
 import { CreateUserDto } from 'src/dto/create-user.dto';
+import {  CombinedJwtAuthGuard } from 'src/user-auth.guard';
+import { AdminJwtAuthGuard } from 'src/admin-auth.guard';
 
 @ApiTags('Users')
 @ApiBearerAuth()
@@ -16,7 +17,7 @@ export class UserController {
 
       
       //get my info
-      @UseGuards(JwtAuthGuard, RoleGuard)
+      @UseGuards( CombinedJwtAuthGuard,RoleGuard)
       @Roles(UserRoles.ADMIN, UserRoles.USER)
       @ApiOperation({ summary: 'Get current user profile' })
       @ApiResponse({ status: 200, description: 'Returns the user profile.' })
@@ -37,7 +38,7 @@ export class UserController {
     }
 
 
-    @UseGuards(JwtAuthGuard, RoleGuard)
+    @UseGuards( CombinedJwtAuthGuard, RoleGuard)
     @Roles(UserRoles.ADMIN)
     @ApiParam({ name: 'id', type: 'string' })
     @ApiResponse({ status: 200, description: 'Returns the user info.' })
@@ -53,7 +54,7 @@ export class UserController {
     }
 
     //get all users
-    @UseGuards(JwtAuthGuard, RoleGuard)
+    @UseGuards( CombinedJwtAuthGuard, RoleGuard)
     @Roles(UserRoles.ADMIN)
     @ApiOperation({ summary: 'Get all users' })
     @ApiResponse({ status: 200, description: 'Returns all users.' })
@@ -65,7 +66,7 @@ export class UserController {
 
 
     //delete user
-    @UseGuards(JwtAuthGuard, RoleGuard)
+    @UseGuards( CombinedJwtAuthGuard, RoleGuard)
     @Roles(UserRoles.ADMIN)
     @ApiOperation({ summary: 'Delete a user' })
     @ApiParam({ name: 'id', type: 'string' })
@@ -77,7 +78,7 @@ export class UserController {
     }
 
     //add user diamond
-    @UseGuards(JwtAuthGuard, RoleGuard)
+    @UseGuards( CombinedJwtAuthGuard, RoleGuard)
     @Roles(UserRoles.ADMIN)
     @ApiOperation({ summary: 'Add diamonds to a user' })
     @ApiParam({ name: 'id', type: 'number' })
@@ -101,7 +102,7 @@ export class UserController {
     }
 
     //add user coin
-    @UseGuards(JwtAuthGuard, RoleGuard)
+    @UseGuards( CombinedJwtAuthGuard, RoleGuard)
     @Roles(UserRoles.ADMIN)
     @ApiOperation({ summary: 'Add coins to a user' })
     @ApiParam({ name: 'id', type: 'number' })
@@ -125,11 +126,11 @@ export class UserController {
     }
 
     //get user filter by name or total diamond or total coin or total point or name
-    @UseGuards(JwtAuthGuard, RoleGuard)
+    @UseGuards( CombinedJwtAuthGuard, RoleGuard)
     @Roles(UserRoles.ADMIN)
     
     @Get("filter")
-    @UseGuards(JwtAuthGuard, RoleGuard)
+    @UseGuards( CombinedJwtAuthGuard, RoleGuard)
     @Roles(UserRoles.ADMIN)
     @Get("filter")
     @ApiOperation({ summary: 'Filter users with pagination' })   
@@ -157,7 +158,7 @@ export class UserController {
   
 
     //admin can create user
-    @UseGuards(JwtAuthGuard, RoleGuard)
+    @UseGuards( CombinedJwtAuthGuard, RoleGuard)
     @Roles(UserRoles.ADMIN)
     @ApiOperation({ summary: 'Create a new user' })
     @ApiBody({ type: CreateUserDto })
