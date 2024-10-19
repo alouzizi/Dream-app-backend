@@ -18,7 +18,8 @@ export class SponsorService {
 
   // Create a new sponsor
   async create(data: { name: string; logo?: string; status: SponsorStatus }) {
-    return this.prisma.sponsor.create({ data });
+    const status = data.status ?? SponsorStatus.INACTIVE;
+    return this.prisma.sponsor.create({ data: { ...data, status } });
   }
 
   // Update a sponsor by ID
@@ -48,13 +49,13 @@ export class SponsorService {
 
   // Get sponsors filtered by name
   async findByName(name: string) {
-	return this.prisma.sponsor.findMany({
-	  where: {
-		name: {
-		  contains: name,
-      mode: 'insensitive',
-		},
-	  },
-	});
+    return this.prisma.sponsor.findMany({
+      where: {
+        name: {
+          contains: name,
+          mode: "insensitive",
+        },
+      },
+    });
   }
 }

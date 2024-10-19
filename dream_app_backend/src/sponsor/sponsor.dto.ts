@@ -25,5 +25,5 @@ export class UpdateSponsorDto {
 
   @IsOptional()
   @IsEnum(SponsorStatus)
-  status?: SponsorStatus; // Optional field
+  status?: SponsorStatus;
 }
