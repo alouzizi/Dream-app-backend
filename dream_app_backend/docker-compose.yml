@@ -15,3 +15,32 @@ services:
 
 volumes:
   postgres_data:
+
+# version: '3.8'
+
+# services:
+#   postgres:
+#     image: postgres:latest
+#     restart: always
+#     environment:
+#       POSTGRES_USER: mfagri
+#       POSTGRES_PASSWORD: mfagri123
+#       POSTGRES_DB: mfagri
+#     ports:
+#       - "5432:5432"
+#     volumes:
+#       - postgres_data:/var/lib/postgresql/data
+
+#   dream_app_backend:
+#     build:
+#       context: ./
+#       dockerfile: Dockerfile
+#     ports:
+#       - "3000:3000"
+#     depends_on:
+#       - postgres
+#     env_file:
+#       - .env
+
+# volumes:
+#   postgres_data:
