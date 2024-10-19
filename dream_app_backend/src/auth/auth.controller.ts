@@ -1,5 +1,5 @@
 import { ApiBearerAuth, ApiTags, ApiOperation, ApiResponse, ApiBody, ApiProperty, ApiConsumes } from '@nestjs/swagger';
-import { Body, Controller, Get, Param, Post, Req,Res, UploadedFile, UseGuards, UseInterceptors } from "@nestjs/common";
+import { Body, Controller, Get, HttpException, HttpStatus, Param, Post, Req,Res, UploadedFile, UseGuards, UseInterceptors } from "@nestjs/common";
 import { AuthService } from "./auth.service";
 import { CreateUserDto } from '../dto/create-user.dto';
 import { JwtAuthGuard } from "src/jwt-auth.guard";
@@ -75,7 +75,21 @@ export class AuthController {
     description: 'User information updated successfully.',
     type: UpdateResponseDto
   })
-  @UseInterceptors(FileInterceptor('avatar'))
+  @UseInterceptors(FileInterceptor('avatar', {
+    limits: { fileSize: 5 * 1024 * 1024 },
+    fileFilter: (req, file, callback) => {
+      if (!file.originalname.match(/\.(jpg|jpeg|png)$/)) {
+        return callback(
+          new HttpException(
+            "Invalid file type. Only JPG and PNG are allowed.",
+            HttpStatus.BAD_REQUEST
+          ),
+          false
+        );
+      }
+      callback(null, true);
+    },
+  }))
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
   async updateUserInfo(@Req() req: any, @Body() createUserDto: CreateUserDto, @UploadedFile() avatar: Express.Multer.File) {
     const id = req.user.id;
