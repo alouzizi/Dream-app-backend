@@ -7,7 +7,7 @@ import { LoginDto } from "src/dto/login-validator.dto";
 import { GoogleDto } from "src/dto/google-validator.dto";
 
 // Response DTOs (you'll need to create these)
-import { UserResponseDto, LoginResponseDto,GoogleAuthResponseDto, UpdateResponseDto,RegisterResponseDto } from '../dto/user-response.dto';
+import { UserResponseDto, LoginResponseDto,GoogleAuthResponseDto, UpdateResponseDto,RegisterResponseDto, AdminLoginResponseDto } from '../dto/user-response.dto';
 import { FileInterceptor } from '@nestjs/platform-express/multer';
 import { CombinedJwtAuthGuard } from 'src/user-auth.guard';
 
@@ -155,7 +155,7 @@ export class AuthController {
   @ApiResponse({ 
     status: 200, 
     description: 'Admin successfully logged in.',
-    type: LoginResponseDto
+    type: AdminLoginResponseDto
   })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
   async adminLogin(@Body() loginUserDto: LoginDto, @Res({ passthrough: true }) response: Response) {

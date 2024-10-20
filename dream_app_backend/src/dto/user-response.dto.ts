@@ -71,6 +71,25 @@ export class LoginResponseDto {
   user: UserResponseDto;
 }
 
+export class adminDto {
+  @ApiProperty()
+  id: number;
+
+  @ApiProperty()
+  email: string;
+
+  @ApiProperty()
+  role: string;
+}
+
+export class AdminLoginResponseDto {
+  @ApiProperty()
+  message: string;
+
+  @ApiProperty()
+  user: adminDto;
+}
+
 export class RegisterResponseDto {
   @ApiProperty()
   accessToken: string;
