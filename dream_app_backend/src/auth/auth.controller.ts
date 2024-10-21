@@ -10,6 +10,7 @@ import { GoogleDto } from "src/dto/google-validator.dto";
 import { UserResponseDto, LoginResponseDto,GoogleAuthResponseDto, UpdateResponseDto,RegisterResponseDto, AdminLoginResponseDto } from '../dto/user-response.dto';
 import { FileInterceptor } from '@nestjs/platform-express/multer';
 import { CombinedJwtAuthGuard } from 'src/user-auth.guard';
+import { serialize } from 'cookie';
 
 
 class FileUploadDto {
@@ -148,27 +149,36 @@ export class AuthController {
     return this.userService.deleteUser(id,body);
   }
 
-  //admin login
-  @Post("admin/login")
-  @ApiOperation({ summary: 'Admin login' })
-  @ApiBody({ type: LoginDto })
-  @ApiResponse({ 
-    status: 200, 
-    description: 'Admin successfully logged in.',
-    type: AdminLoginResponseDto
-  })
-  @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  @Post('admin/login')
   async adminLogin(@Body() loginUserDto: LoginDto, @Res({ passthrough: true }) response: Response) {
     const { user, token } = await this.userService.adminLogin(loginUserDto);
-    
-    // Set the JWT as an HTTP-only cookie
-    response.cookie('token', token, {
+  
+    // const serialized = serialize('Jwt-tk', token, {
+    //   httpOnly: true,
+    //   secure: process.env.NODE_ENV === 'production', // Use secure in production
+    //   sameSite: 'strict', // or 'lax' depending on your requirements
+    //   maxAge: 1000 * 60 * 60 * 24 * 2, // 2 days
+    //   path: '/',
+    //   // domain: 'localhos',
+    // });
+
+    // response.setHeader('Set-Cookie', serialized);
+    response.cookie('Jwt-tk', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
-      sameSite: 'strict', // Protect against CSRF
-      // maxAge: 3600000, // 1 hour in milliseconds
+      path: '/',
+      sameSite: 'strict',
+      secure: false,
+
     });
-    return { message: "Login successful", user };
+
+    return {
+      message: 'Login success',
+      user: {
+        id: user.id,
+        email: user.email,
+        // Add other necessary user properties, but avoid anything that might contain circular references
+      }
+    };
   }
 
 
