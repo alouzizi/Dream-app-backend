@@ -214,4 +214,13 @@ export class UserService {
       }
     }
   
+
+    async updateUserPoints(userId: number, newPoints: number) {
+      // Assuming you're using an ORM like TypeORM or Prisma
+      return this.prisma.user.update({
+        where: { id: userId },
+        data: { points: newPoints },
+      });
+    }
+
 }

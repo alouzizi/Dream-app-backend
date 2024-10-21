@@ -1,9 +1,15 @@
-import { Injectable } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
-import { CreateStoreDto } from './store.dto';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
+import { PrismaClient } from "@prisma/client";
+import { CreateStoreDto } from "./store.dto";
+import { UserService } from "src/user/user.service";
 
 @Injectable()
 export class StoreService {
+  constructor(private readonly userService: UserService) {}
   private prisma = new PrismaClient();
 
   // Create a new store
@@ -43,4 +49,30 @@ export class StoreService {
       where: { id },
     });
   }
+
+
+
+  async payForProduct(productId: number, userId: string) {
+    const user = await this.userService.getUserInfo(userId);
+    const product = await this.findStoreById(productId);
+
+    if (!user || !product) {
+      throw new NotFoundException("User or product not found");
+    }
+
+    if (user.points < product.price) {
+      throw new BadRequestException(
+        "Insufficient balance to purchase this product"
+      );
+    }
+    user.points -= product.price;
+    await this.userService.updateUserPoints(+userId, user.points);
+   
+    // add the product to the user
+    return {
+      message: `Product "${product.name}" successfully purchased by user ${user.name}`,
+    };
+  }
+
+
 }

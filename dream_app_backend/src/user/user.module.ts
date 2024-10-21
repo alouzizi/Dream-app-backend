@@ -10,6 +10,7 @@ import { jwtConstants } from 'src/constants';
 
 @Module({
   controllers: [UserController],
-  providers: [UserService, PrismaClient,JwtStrategy]
+  providers: [UserService, PrismaClient,JwtStrategy],
+  exports: [UserService],
 })
 export class UserModule {}
