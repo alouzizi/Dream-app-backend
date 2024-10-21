@@ -28,17 +28,11 @@ import { LoginDto } from "src/dto/login-validator.dto";
 import { GoogleDto } from "src/dto/google-validator.dto";
 
 // Response DTOs (you'll need to create these)
-import {
-  UserResponseDto,
-  LoginResponseDto,
-  GoogleAuthResponseDto,
-  UpdateResponseDto,
-  RegisterResponseDto,
-  AdminLoginResponseDto,
-} from "../dto/user-response.dto";
-import { FileInterceptor } from "@nestjs/platform-express/multer";
-import { CombinedJwtAuthGuard } from "src/user-auth.guard";
-import { serialize } from "cookie";
+import { UserResponseDto, LoginResponseDto,GoogleAuthResponseDto, UpdateResponseDto,RegisterResponseDto, AdminLoginResponseDto } from '../dto/user-response.dto';
+import { FileInterceptor } from '@nestjs/platform-express/multer';
+import { CombinedJwtAuthGuard } from 'src/user-auth.guard';
+import { serialize } from 'cookie';
+
 
 class FileUploadDto {
   @ApiProperty({ type: "string", format: "binary" })
@@ -190,38 +184,37 @@ export class AuthController {
     return { status: "Authenticated" };
   }
 
-  //admin login
-  @Post("admin/login")
-  @ApiOperation({ summary: "Admin login" })
-  @ApiBody({ type: LoginDto })
-  @ApiResponse({
-    status: 200,
-    description: "Admin successfully logged in.",
-    type: AdminLoginResponseDto,
-  })
-  @ApiResponse({ status: 401, description: "Unauthorized." })
-  async adminLogin(
-    @Body() loginUserDto: LoginDto,
-    @Res({ passthrough: true }) response: Response
-  ) {
-    console.log("loginUserDto", loginUserDto);
+  @Post('admin/login')
+  async adminLogin(@Body() loginUserDto: LoginDto, @Res({ passthrough: true }) response: Response) {
     const { user, token } = await this.userService.adminLogin(loginUserDto);
-
-    // Set the JWT as an HTTP-only cookie
-    // response.cookie('token', token, {
+  
+    // const serialized = serialize('Jwt-tk', token, {
     //   httpOnly: true,
-    //   // secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
-    //   // sameSite: 'strict', // Protect against CSRF
-    //   // maxAge: 3600000, // 1 hour in milliseconds
+    //   secure: process.env.NODE_ENV === 'production', // Use secure in production
+    //   sameSite: 'strict', // or 'lax' depending on your requirements
+    //   maxAge: 1000 * 60 * 60 * 24 * 2, // 2 days
+    //   path: '/',
+    //   // domain: 'localhos',
     // });
 
-    // return { message: "Login successful", user };
-    const serialized = serialize("Rabeeh", token, {
+    // response.setHeader('Set-Cookie', serialized);
+    response.cookie('Jwt-tk', token, {
       httpOnly: true,
-      maxAge: 1000 * 60 * 60 * 24 * 2, // 2 days
-      path: "/",
+      path: '/',
+      sameSite: 'strict',
+      secure: false,
+
     });
-    response.setHeader("Set-Cookie", serialized);
+
+    return {
+      message: 'Login success',
+      user: {
+        id: user.id,
+        email: user.email,
+        // Add other necessary user properties, but avoid anything that might contain circular references
+      }
+    };
+  }
 
     return {
       message: "Login success",

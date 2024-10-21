@@ -21,17 +21,19 @@ async function bootstrap() {
   .addBearerAuth()
   .build();
   //use cors
-  app.enableCors(
-    {
-      origin: '*',
-      credentials: true,
-    },
-  );
+  app.enableCors({
+
+   origin: true,
+    credentials: true,  // Allow sending credentials such as cookies
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+
+  });
+  
 
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
   app.use(cookieParser());
   app.useGlobalPipes(new ValidationPipe());
-  await app.listen(3000);
+  await app.listen(3001);
 }
 bootstrap();
