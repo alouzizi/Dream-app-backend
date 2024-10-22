@@ -21,16 +21,19 @@ export class CombinedJwtAuthGuard extends AuthGuard("jwt") {
   }
 
   getRequest(context: ExecutionContext): Request {
-    const request = context.switchToHttp().getRequest<Request>();
-
+    const request = context.switchToHttp().getRequest();
+    console.log("Checking for token in headers", request.headers);
     // Check if token is present in the Authorization header (for users)
     const authHeader = request.headers.authorization;
+    console.log("Checking for token in headers", request.headers);
     if (authHeader && authHeader.startsWith("Bearer ")) {
       return request;
     }
 
     // If not found in headers, check for the token in cookies (for admins)
+    // console.log("Checking for token in headers", request);
     console.log("Checking for token in cookies", request.cookies);
+    // console.log("Checking for token all req ", request);
   
     const token = request.cookies["Jwt-tk"];
     if (token) {

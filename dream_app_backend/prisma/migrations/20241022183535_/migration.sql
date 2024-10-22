@@ -37,12 +37,8 @@ CREATE TABLE "Games" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
     "requiredDiamonds" INTEGER NOT NULL,
-    "duration" INTEGER NOT NULL,
-    "reward" TEXT NOT NULL,
-    "trophyTypes" TEXT[],
+    "prizes" TEXT[],
     "answersId" INTEGER,
-    "images" TEXT,
-    "options" TEXT,
     "status" "GameStatus" NOT NULL,
     "licenseId" TEXT,
     "winnerId" INTEGER,
@@ -119,7 +115,7 @@ CREATE TABLE "store" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
     "price" INTEGER NOT NULL,
-    "productType" TEXT NOT NULL,
+    "reward" INTEGER NOT NULL,
 
     CONSTRAINT "store_pkey" PRIMARY KEY ("id")
 );

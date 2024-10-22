@@ -8,7 +8,26 @@ export class SponsorService {
 
   // Fetch all sponsors
   async findAll() {
-    return this.prisma.sponsor.findMany();
+    // Use Prisma's include to fetch games count in a single query
+    const sponsors = await this.prisma.sponsor.findMany({
+      orderBy: {
+        createdAt: 'desc',
+      },
+      include: {
+        _count: {
+          select: {
+            games: true,
+          },
+        },
+      },
+    });
+  
+    // Transform the response to match your desired format
+    return sponsors.map((sponsor) => ({
+      ...sponsor,
+      games: sponsor._count.games,
+      _count: undefined, // Remove the _count property from the final response
+    }));
   }
 
   // Fetch a single sponsor by ID
@@ -27,6 +46,7 @@ export class SponsorService {
     id: number,
     data: { name?: string; logo?: string; status?: SponsorStatus }
   ) {
+    console.log("data", data);
     return this.prisma.sponsor.update({
       where: { id },
       data,

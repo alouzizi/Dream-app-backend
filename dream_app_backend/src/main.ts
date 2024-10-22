@@ -21,12 +21,20 @@ async function bootstrap() {
   .addBearerAuth()
   .build();
   //use cors
+  // app.enableCors({
+
+  //  origin: true,
+  //   credentials: true,  // Allow sending credentials such as cookies
+  //   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+
+  // });
   app.enableCors({
-
-   origin: true,
-    credentials: true,  // Allow sending credentials such as cookies
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-
+    origin: (origin, callback) => {
+      callback(null, true); // Allow all origins
+    },
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    allowedHeaders: 'Content-Type, Accept, Authorization',
+    credentials: true
   });
   
 

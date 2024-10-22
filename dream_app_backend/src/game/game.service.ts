@@ -33,6 +33,22 @@ export class GameService {
       status = GameStatus.ENDED;
     }
 
+    //check if sponsor is empty return error
+    if (createGameDto.sponsors.length === 0) {
+      throw new NotFoundException("Sponsor is required");
+    }
+    //check if the sponsers is exist in the database
+    const sponsor = await this.prisma.sponsor.findMany({
+      where: {
+        id: {
+          in: createGameDto.sponsors,
+        },
+      },
+    });
+    if (sponsor.length !== createGameDto.sponsors.length) {
+      throw new NotFoundException("Sponsor not found");
+    }
+
     const game = await this.prisma.games.create({
       data: {
         name: createGameDto.gameName,

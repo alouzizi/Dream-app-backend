@@ -1,32 +1,26 @@
-import { ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
-import { JsonWebTokenError, TokenExpiredError } from 'jsonwebtoken';
-import { Request } from 'express';
+import { CanActivate, ExecutionContext, Injectable } from "@nestjs/common";
+import { JwtService } from "@nestjs/jwt";
+import { Observable } from "rxjs";
 
 @Injectable()
-export class AdminJwtAuthGuard extends AuthGuard('jwt') {
-  handleRequest(err, user, info, context: ExecutionContext) {
-    if (info instanceof TokenExpiredError) {
-      throw new UnauthorizedException('Token expired');
-    } else if (info instanceof JsonWebTokenError) {
-      throw new UnauthorizedException('Invalid token');
-    } else if (err || !user) {
-      throw err || new UnauthorizedException();
+export class AdminJwtAuthGuard implements CanActivate {
+    constructor(private jwtService: JwtService) {}
+    canActivate(
+      context: ExecutionContext,
+    ): boolean | Promise<boolean> | Observable<boolean> {
+      const request = context.switchToHttp().getRequest();
+      console.log("Checking for token in cookies", request.cookies);
+      try {
+        const jwtToken = request.cookies['Jwt-tk'];
+        if (!jwtToken) {
+          // console.log('No JWT token found in cookies');
+          return false;
+        }
+        this.jwtService.verify(jwtToken);
+        return true;
+      } catch (e) {
+        // console.log('JWT token verification failed:', e.message);
+        return false;
+      }
     }
-    return user;
   }
-
-  getRequest(context: ExecutionContext): Request {
-    const request = context.switchToHttp().getRequest<Request>();
-
-    // Extract token from cookie instead of header
-    const token = request.cookies['Jwt-tk'];
-    if (!token) {
-      throw new UnauthorizedException('No token found in cookies');
-    }
-
-    // Manually attach the token to the request headers for Passport to validate
-    request.headers.authorization = `Bearer ${token}`;
-    return request;
-  }
-}

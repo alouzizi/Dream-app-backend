@@ -2,9 +2,12 @@ import { Controller, Post, Body, Get, Param, UseGuards } from '@nestjs/common';
 import { GameService } from './game.service';
 import { CreateGameDto } from './dto/game.dto';
 import { RoleGuard, Roles, UserRoles } from 'src/role.guard';
+import { JwtAuthGuard } from 'src/jwt-auth.guard';
 
 
-// @UseGuards(RoleGuard)
+@UseGuards( JwtAuthGuard, RoleGuard)
+@Roles(UserRoles.ADMIN)
+
 
 @Controller('game')
 export class GameController {
@@ -13,6 +16,7 @@ export class GameController {
   // @Roles(UserRoles.ADMIN)
   @Post('create')
   async createGame(@Body() createGameDto: CreateGameDto) {
+    console.log('createGameDto', createGameDto);
     return this.gameService.createGame(createGameDto);
   }
 

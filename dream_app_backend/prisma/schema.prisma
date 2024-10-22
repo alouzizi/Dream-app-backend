@@ -108,6 +108,7 @@ model Sponsor {
   reports Report[]
   // description String
   // website     String
+  createdAt        DateTime    @default(now())
 }
 
 

@@ -32,6 +32,8 @@ import { UserResponseDto, LoginResponseDto,GoogleAuthResponseDto, UpdateResponse
 import { FileInterceptor } from '@nestjs/platform-express/multer';
 import { CombinedJwtAuthGuard } from 'src/user-auth.guard';
 import { serialize } from 'cookie';
+import { AdminJwtAuthGuard } from "src/admin-auth.guard";
+import { JwtAuthGuard } from "src/jwt-auth.guard";
 
 
 class FileUploadDto {
@@ -178,10 +180,12 @@ export class AuthController {
     return this.userService.deleteUser(id, body);
   }
 
-  @UseGuards(CombinedJwtAuthGuard)
-  @Get("check-auth")
-  getStatus() {
-    return { status: "Authenticated" };
+  @UseGuards(JwtAuthGuard)
+  @Get('check-auth')
+  async checkAuth(@Req() request: Request) {
+    // Debug logging
+
+    return { status: 'Authenticated' };
   }
 
   @Post('admin/login')
@@ -201,13 +205,15 @@ export class AuthController {
     response.cookie('Jwt-tk', token, {
       httpOnly: true,
       path: '/',
-      sameSite: 'strict',
+      sameSite: 'lax',
       secure: false,
+      maxAge: 1000 * 60 * 60 * 24 * 2, // 2 days
 
     });
 
     return {
       message: 'Login success',
+      token: token,
       user: {
         id: user.id,
         email: user.email,

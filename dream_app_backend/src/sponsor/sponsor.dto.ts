@@ -11,6 +11,7 @@ export class CreateSponsorDto {
   @IsOptional()
   logo?: string;
 
+  @IsOptional()
   @IsEnum(SponsorStatus)
   status: SponsorStatus;
 }
