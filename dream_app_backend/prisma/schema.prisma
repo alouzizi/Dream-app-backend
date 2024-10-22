@@ -58,12 +58,11 @@ model Games {
   id               Int         @id @default(autoincrement())
   name             String
   requiredDiamonds Int
-  duration         Int // duration in seconds
-  reward           String
-  trophyTypes      String[]
+  // duration         Int // duration in seconds
+  prizes           String[]
   answersId        Int?
-  images           String?
-  options          String?
+  // images           String?
+  // options          String?
   status           GameStatus
   sponsorId        Sponsor[]
   licenseId        String?

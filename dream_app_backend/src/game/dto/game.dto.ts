@@ -5,57 +5,54 @@ import { Type } from 'class-transformer';
 
 export class CreateGameDto {
   @IsString() // New field for game name
-  name: string;
+  gameName: string;
 
   @IsInt()
-  requiredDiamonds: number;
+  requiredDiamond: number;
 
-  @IsInt()
-  duration: number;
+  // @IsInt()
+  // duration: number;
  
-  @IsString()
-  reward: string;
+  // @IsString()
+  // reward: string;
 
-  @IsArray()
-  @IsString({ each: true })
-  trophyTypes: string[];
+  // @IsArray()
+  // @IsString({ each: true })
+  // trophyTypes: string[];
   
   @IsArray()
   @IsInt({ each: true })
-  sponsorId: number[] = [];
+  sponsors: number[] = [];
 
 
   @Type(() => Date) 
   @IsDate()
-  startDate: Date;
+  startingDate: Date;
 
-  @Type(() => Date)
-  @IsDate()
-  endDate: Date;
+  // @Type(() => Date)
+  // @IsDate()
+  // endDate: Date;
   
+  // @IsOptional()
+  @IsString({each: true})
+  prizes: string[];
+
+
+  // @IsOptional()
+  // @IsString()
+  // options?: string;
+
   @IsOptional()
   @IsString()
-  images?: string;
+  licences?: string;
 
-
-  @IsOptional()
-  @IsString()
-  options?: string;
-
-  @IsOptional()
-  @IsString()
-  licenseId?: string;
-
-  @IsOptional()
-  @IsInt()
-  winnerId?: number;
 
   @IsArray()
-  questions: {
+  quizFile: {
     question: string;
-    maxTime: number;
+    time: number;
     options: {
-      optionText: string;
+      text: string;
       isCorrect: boolean;
     }[];
   }[];

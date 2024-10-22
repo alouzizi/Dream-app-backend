@@ -17,10 +17,11 @@ export class GameService {
     const now = new Date();
     let status: GameStatus;
 
-    const startDate = new Date(createGameDto.startDate);
-    const endDate = new Date(createGameDto.endDate);
+    const startDate = new Date(createGameDto.startingDate);
+    const duration = createGameDto.quizFile.reduce((total, question) => total + question.time, 0);
+    const endDate = new Date(startDate.getTime() + duration * 1000);
 
-    console.log("now", now);
+
     console.log("startDate", startDate);
     console.log("endDate", endDate);
 
@@ -34,30 +35,26 @@ export class GameService {
 
     const game = await this.prisma.games.create({
       data: {
-        name: createGameDto.name,
-        requiredDiamonds: createGameDto.requiredDiamonds,
-        duration: createGameDto.duration,
-        reward: createGameDto.reward,
+        name: createGameDto.gameName,
+        requiredDiamonds: createGameDto.requiredDiamond,
+        prizes: createGameDto.prizes,
         status: status,
-        startDate: createGameDto.startDate,
-        endDate: createGameDto.endDate,
+        startDate: startDate,
+        // endDate: createGameDto.endDate,
         sponsorId:
-          createGameDto.sponsorId.length > 0
+          createGameDto.sponsors.length > 0
             ? {
-                connect: createGameDto.sponsorId.map((id) => ({ id })),
+                connect: createGameDto.sponsors.map((id) => ({ id })),
               }
             : undefined,
-        images: createGameDto.images,
-        options: createGameDto.options,
-        licenseId: createGameDto.licenseId,
-        winnerId: createGameDto.winnerId,
+        licenseId: createGameDto.licences,
         questions: {
-          create: createGameDto.questions.map((question) => ({
+          create: createGameDto.quizFile.map((question) => ({
             question: question.question,
-            maxTime: question.maxTime,
+            maxTime: question.time,
             options: {
               create: question.options.map((option) => ({
-                optionText: option.optionText,
+                optionText: option.text,
                 isCorrect: option.isCorrect,
               })),
             },

@@ -4,13 +4,13 @@ import { CreateGameDto } from './dto/game.dto';
 import { RoleGuard, Roles, UserRoles } from 'src/role.guard';
 
 
-// @UseGuards(JwtAuthGuard, RoleGuard)
+// @UseGuards(RoleGuard)
 
 @Controller('game')
 export class GameController {
   constructor(private readonly gameService: GameService) {}
 
-  @Roles(UserRoles.ADMIN)
+  // @Roles(UserRoles.ADMIN)
   @Post('create')
   async createGame(@Body() createGameDto: CreateGameDto) {
     return this.gameService.createGame(createGameDto);

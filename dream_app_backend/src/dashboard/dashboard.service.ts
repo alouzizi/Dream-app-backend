@@ -387,7 +387,7 @@ export class DashboardService {
             },
             game: {
               select: {
-                trophyTypes: true
+               prizes: true
               }
             }
           }
