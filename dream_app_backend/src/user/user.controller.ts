@@ -46,6 +46,8 @@ export class UserController {
     @Get(":id")
     async getUserInfo(@Param("id") id: string) {
         try{
+          //check if user exists
+          
         return this.userService.getUserInfo(id);
         }
         catch(err){

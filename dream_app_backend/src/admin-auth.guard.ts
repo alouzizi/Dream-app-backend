@@ -20,7 +20,7 @@ export class AdminJwtAuthGuard extends AuthGuard('jwt') {
     const request = context.switchToHttp().getRequest<Request>();
 
     // Extract token from cookie instead of header
-    const token = request.cookies['token'];
+    const token = request.cookies['Jwt-tk'];
     if (!token) {
       throw new UnauthorizedException('No token found in cookies');
     }
