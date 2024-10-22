@@ -9,7 +9,7 @@ export class CreateStoreDto {
   @IsNotEmpty()
   price: number;
 
-  @IsString()
+  @IsInt()
   @IsNotEmpty()
-  productType: string;
+  reward: number;
 }

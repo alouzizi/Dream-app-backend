@@ -143,7 +143,7 @@ model store {
   id        Int @id @default(autoincrement())
   name        String
   price       Int
-  productType String
+  reward      Int
 
 }
 

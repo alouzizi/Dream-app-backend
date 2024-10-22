@@ -18,7 +18,7 @@ export class StoreService {
       data: {
         name: createStoreDto.name,
         price: createStoreDto.price,
-        productType: createStoreDto.productType,
+        reward: createStoreDto.reward
       },
     });
   }
@@ -68,7 +68,9 @@ export class StoreService {
     user.points -= product.price;
     await this.userService.updateUserPoints(+userId, user.points);
    
-    // add the product to the user
+
+    await this.userService.addUserDiamond(+userId, product.reward);
+
     return {
       message: `Product "${product.name}" successfully purchased by user ${user.name}`,
     };
