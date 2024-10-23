@@ -65,6 +65,14 @@ export class CreateUserDto {
   type: string;
 
   @ApiProperty({ type: 'string', format: 'binary', required: false })
+  @IsOptional()
   avatar?: any;
   // Other fields can be added based on the schema (like avatar, points, etc.)
+  @ApiProperty()
+  @IsOptional()
+  initialCoins: number
+
+  @ApiProperty()
+  @IsOptional()
+  initialDiamonds: number
 }

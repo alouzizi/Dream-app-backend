@@ -37,26 +37,36 @@ export class DashboardService {
 
     //get all games
     async getAllGames() {
-        return await this.prisma.games.findMany({
+        const games = await this.prisma.games.findMany({
+            orderBy: {
+                createdAt: 'desc',
+              },
             include: {
                 
                 winners: {
                     select: {
                         rank: true
-                        
                     }
-                  },
+                },
                 userGames: {
                     select: {
                         userId: true,
                         gameId: true
                     }
                 },
-                
-                sponsorId: true
-            
+                sponsorId: true,
+                _count: {
+                    select: {
+                        reports: true
+                    }
+                }
             }
         });
+    
+        return games.map(game => ({
+            ...game,
+            isReported: game._count.reports > 0
+        }));
     }
 
     //get unreported games

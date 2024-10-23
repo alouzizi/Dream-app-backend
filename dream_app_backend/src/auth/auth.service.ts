@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
+import { ConflictException, Injectable, InternalServerErrorException, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { PrismaClient, UserRoles } from "@prisma/client";
 import * as jwt from "jsonwebtoken";
 import * as bcrypt from "bcrypt";
@@ -12,88 +12,97 @@ export class AuthService {
   jwtService: any;
   constructor(private prisma: PrismaClient) {}
 
-  async register(createUserDto: CreateUserDto,avatar: Express.Multer.File) {
+  async register(createUserDto: CreateUserDto, avatar: Express.Multer.File) {
     try {
-      const {
-        name,
-        email,
-        phoneNumber,
-        googleId,
-        password,
-        role,
-        dob,
-        country,
-        city,
-        gender,
-        type,
-      } = createUserDto;
-  
-      // Check if user already exists by email, phone number, or Google ID
-      const existingUser = await this.prisma.user.findFirst({
-        where: {
-          OR: [
-            { email: email },
-            { phoneNumber: phoneNumber },
-            { googleId: googleId }
-          ]
-        }
-      });
-  
-      if (existingUser) {
-        return {
-          message: "User already exists",
-          statusCode: 400,
-        };
-      }
-  
-      let hashedPassword = null;
-  
-      // If googleId is not provided, hash the password
-      if (!googleId && password) {
-        hashedPassword = await bcrypt.hash(password, 10);
-      }
+        const {
+            name,
+            email,
+            phoneNumber,
+            googleId,
+            password,
+            role,
+            dob,
+            country,
+            city,
+            gender,
+            type,
+        } = createUserDto;
 
-      let avatarPath = null;
-      if (avatar) {
-        const uploadDir = './uploads/avatars';
-        if (!fs.existsSync(uploadDir)) {
-          fs.mkdirSync(uploadDir, { recursive: true });
+        // Check if user already exists by email, phone number, Google ID, or name
+        const existingUser = await this.prisma.user.findFirst({
+            where: {
+                OR: [
+                    { email: email },
+                    { phoneNumber: phoneNumber },
+                    { googleId: googleId },
+                    { name: name }  // Added name check
+                ]
+            }
+        });
+
+        if (existingUser) {
+            // Provide more specific error message
+            let errorField = '';
+            if (existingUser.email === email) errorField = 'email';
+            else if (existingUser.phoneNumber === phoneNumber) errorField = 'phone number';
+            else if (existingUser.googleId === googleId) errorField = 'Google ID';
+            else if (existingUser.name === name) errorField = 'username';
+
+            throw new ConflictException(`User with this ${errorField} already exists`);
         }
-        avatarPath = path.join(uploadDir, `${Date.now()}-${avatar.originalname}`);
-        fs.writeFileSync(avatarPath, avatar.buffer);
-      }
-  
-      // Create user with or without the password (depending on googleId)
-      const user = await this.prisma.user.create({
-        data: {
-          name,
-          email,
-          phoneNumber,
-          googleId,
-          password: hashedPassword,  // Will be null if not provided
-          dob: dob ? new Date(dob) : null, // Convert to Date if provided
-          role: role ?? UserRoles.USER,
-          country: country,
-          city: city,
-          avatar: avatarPath,
-          gender: gender,
-          type: type, // Default type // normal and special
-        },
-      });
-  
-      // Generate a JWT token
-      const payload = { email: user.email, sub: user.id, role: user.role }; // Customize the payload
-      const token = jwt.sign(payload, jwtConstants.secret, { expiresIn: "1h" });
-  
-      return {
-        message: "User created successfully",
-        user,
-        token, // Return the JWT token
-      };
+
+        let hashedPassword = null;
+        if (!googleId && password) {
+            hashedPassword = await bcrypt.hash(password, 10);
+        }
+
+        let avatarPath = null;
+        if (avatar) {
+            const uploadDir = './uploads/avatars';
+            if (!fs.existsSync(uploadDir)) {
+                fs.mkdirSync(uploadDir, { recursive: true });
+            }
+            avatarPath = path.join(uploadDir, `${Date.now()}-${avatar.originalname}`);
+            fs.writeFileSync(avatarPath, avatar.buffer);
+        }
+
+        const user = await this.prisma.user.create({
+            data: {
+                name,
+                email,
+                phoneNumber,
+                googleId,
+                password: hashedPassword,
+                dob: dob ? new Date(dob) : null,
+                role: role ?? UserRoles.USER,
+                country,
+                city,
+                avatar: avatarPath,
+                gender,
+                type,
+            },
+        });
+
+        const payload = { email: user.email, sub: user.id, role: user.role };
+        const token = jwt.sign(payload, jwtConstants.secret, { expiresIn: "1h" });
+
+        return {
+            message: "User created successfully",
+            user,
+            token,
+        };
     } catch (error) {
-      return error;
+        // Proper error handling
+        if (error instanceof ConflictException) {
+            throw error;
+        }
+        if (error.code === 'P2002') {
+            const field = error.meta?.target[0];
+            throw new ConflictException(`User with this ${field} already exists`);
+        }
+        throw new InternalServerErrorException('Something went wrong');
     }
-  }
+}
   
 
   async login(loginUserDto: any) {

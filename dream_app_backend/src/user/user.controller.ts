@@ -1,11 +1,19 @@
-import { Body, ConflictException, Controller, Delete, Get, HttpException, HttpStatus, InternalServerErrorException, Param, ParseIntPipe, Post, Query, Req, Res, UnauthorizedException, UseGuards } from '@nestjs/common';
+import { Body, ConflictException, Controller, Delete, Get, HttpException, HttpStatus, InternalServerErrorException, Param, ParseIntPipe, Post, Query, Req, Res, UnauthorizedException, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/swagger';
 import { UserService } from './user.service';
 import { RoleGuard, Roles, UserRoles } from 'src/role.guard';
 import { log } from 'console';
 import { CreateUserDto } from 'src/dto/create-user.dto';
-import {  CombinedJwtAuthGuard } from 'src/user-auth.guard';
+
 import { AdminJwtAuthGuard } from 'src/admin-auth.guard';
+
+import { JwtAuthGuard } from 'src/jwt-auth.guard';
+import { FileInterceptor } from "@nestjs/platform-express";
+import * as path from "path";
+import * as fs from "fs";
+import multer from 'multer';
+
+
 
 @ApiTags('Users')
 @ApiBearerAuth()
@@ -17,7 +25,7 @@ export class UserController {
 
       
       //get my info
-      @UseGuards( CombinedJwtAuthGuard,RoleGuard)
+      @UseGuards( JwtAuthGuard,RoleGuard)
       @Roles(UserRoles.ADMIN, UserRoles.USER)
       @ApiOperation({ summary: 'Get current user profile' })
       @ApiResponse({ status: 200, description: 'Returns the user profile.' })
@@ -38,7 +46,7 @@ export class UserController {
     }
 
 
-    @UseGuards( CombinedJwtAuthGuard, RoleGuard)
+    @UseGuards( JwtAuthGuard, RoleGuard)
     @Roles(UserRoles.ADMIN)
     @ApiParam({ name: 'id', type: 'string' })
     @ApiResponse({ status: 200, description: 'Returns the user info.' })
@@ -56,19 +64,20 @@ export class UserController {
     }
 
     //get all users
-    @UseGuards( CombinedJwtAuthGuard, RoleGuard)
+    @UseGuards( JwtAuthGuard, RoleGuard)
     @Roles(UserRoles.ADMIN)
     @ApiOperation({ summary: 'Get all users' })
     @ApiResponse({ status: 200, description: 'Returns all users.' })
     @ApiResponse({ status: 401, description: 'Unauthorized.' })
     @Get()
     async getAllUsers() {
+      // console.log("get all users");
         return this.userService.getAllUsers();
     }
 
 
     //delete user
-    @UseGuards( CombinedJwtAuthGuard, RoleGuard)
+    @UseGuards( JwtAuthGuard, RoleGuard)
     @Roles(UserRoles.ADMIN)
     @ApiOperation({ summary: 'Delete a user' })
     @ApiParam({ name: 'id', type: 'string' })
@@ -80,18 +89,19 @@ export class UserController {
     }
 
     //add user diamond
-    @UseGuards( CombinedJwtAuthGuard, RoleGuard)
+    @UseGuards( JwtAuthGuard, RoleGuard)
     @Roles(UserRoles.ADMIN)
     @ApiOperation({ summary: 'Add diamonds to a user' })
     @ApiParam({ name: 'id', type: 'number' })
     @ApiParam({ name: 'diamond', type: 'number' })
     @ApiResponse({ status: 200, description: 'Diamonds added successfully.' })
     @ApiResponse({ status: 401, description: 'Unauthorized.' })
-    @Get("addDiamond/:id/:diamond")
+    @Post("addDiamond/:id/:diamond")
     async addUserDiamond(
       @Param("id", ParseIntPipe) id: number,
       @Param("diamond", ParseIntPipe) diamond: number
     ) {
+      console.log("add diamond");
       try {
         const updatedUser = await this.userService.addUserDiamond(id, diamond);
         return { message: "Diamonds added successfully", user: updatedUser };
@@ -104,14 +114,14 @@ export class UserController {
     }
 
     //add user coin
-    @UseGuards( CombinedJwtAuthGuard, RoleGuard)
+    @UseGuards( JwtAuthGuard, RoleGuard)
     @Roles(UserRoles.ADMIN)
     @ApiOperation({ summary: 'Add coins to a user' })
     @ApiParam({ name: 'id', type: 'number' })
     @ApiParam({ name: 'coin', type: 'number' })
     @ApiResponse({ status: 200, description: 'Coins added successfully.' })
     @ApiResponse({ status: 401, description: 'Unauthorized.' })
-    @Get("addCoin/:id/:coin")
+    @Post("addCoin/:id/:coin")
     async addUserCoin(
       @Param("id", ParseIntPipe) id: number,
       @Param("coin", ParseIntPipe) coin: number
@@ -128,11 +138,11 @@ export class UserController {
     }
 
     //get user filter by name or total diamond or total coin or total point or name
-    @UseGuards( CombinedJwtAuthGuard, RoleGuard)
+    @UseGuards( JwtAuthGuard, RoleGuard)
     @Roles(UserRoles.ADMIN)
     
     @Get("filter")
-    @UseGuards( CombinedJwtAuthGuard, RoleGuard)
+    @UseGuards( JwtAuthGuard, RoleGuard)
     @Roles(UserRoles.ADMIN)
     @Get("filter")
     @ApiOperation({ summary: 'Filter users with pagination' })   
@@ -160,25 +170,97 @@ export class UserController {
   
 
     //admin can create user
-    @UseGuards( CombinedJwtAuthGuard, RoleGuard)
+    @UseGuards( JwtAuthGuard, RoleGuard)
     @Roles(UserRoles.ADMIN)
     @ApiOperation({ summary: 'Create a new user' })
     @ApiBody({ type: CreateUserDto })
     @ApiResponse({ status: 201, description: 'User created successfully.' })
     @ApiResponse({ status: 401, description: 'Unauthorized.' })
     @ApiResponse({ status: 409, description: 'User already exists.' })
+    @UseInterceptors(
+      FileInterceptor("avatar", {
+        limits: { fileSize: 5 * 1024 * 1024 },
+        fileFilter: (req, file, callback) => {
+          if (!file.originalname.match(/\.(jpg|jpeg|png)$/)) {
+            return callback(
+              new HttpException(
+                "Invalid file type. Only JPG and PNG are allowed.",
+                HttpStatus.BAD_REQUEST
+              ),
+              false
+            );
+          }
+          callback(null, true);
+        },
+      })
+    )
+
+
+    @UseGuards(JwtAuthGuard, RoleGuard)
+    @Roles(UserRoles.ADMIN)
     @Post("createUser")
-    async createUser(@Body() body: CreateUserDto, @Res() res) {
-        try {
-        const user = await this.userService.createUser(body);
-        res.status(201).json({message: "User created", user});
-        } catch (err) {
-        if (err instanceof ConflictException) {
-            return res.status(409).json({message: err.message});
+async createUser(
+    @Body() body: CreateUserDto,
+    @UploadedFile() avatar: Express.Multer.File,
+    @Res() res
+) {
+    try {
+      console.log("create user");
+        const generatePassword = () => {
+            const length = 8;
+            const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
+            let password = "";
+            for (let i = 0; i < length; i++) {
+                const randomIndex = Math.floor(Math.random() * charset.length);
+                password += charset[randomIndex];
+            }
+            return password;
+        };
+        let logoPath = null;
+        const generatedPassword = generatePassword();
+        if (avatar) {
+          const uploadDir = './uploads/avatars';
+  
+          if (!fs.existsSync(uploadDir)) {
+            fs.mkdirSync(uploadDir, { recursive: true });
+          }
+  
+          // Delete old logo if it exists
+          if (body.avatar && fs.existsSync(body.avatar)) {
+            fs.unlinkSync(body.avatar);
+          }
+  
+          // Create a unique file path for new logo
+          logoPath = path.join(uploadDir, `${Date.now()}-${avatar.originalname}`);
+          // Write new file to disk
+          fs.writeFileSync(logoPath, avatar.buffer);
         }
-        return res.status(400).json({message: "Error in creating user"});
+        const userData = {
+            ...body,
+            password: generatedPassword,
+            avatar: logoPath
+        };
+
+        const user = await this.userService.createUser(userData);
+        
+        return res.status(201).json({
+            message: "User created successfully",
+            user: {
+                email: user.email,
+                password: generatedPassword,
+                avatar: user.avatar
+            }
+        });
+    } catch (error) {
+        if (error instanceof ConflictException) {
+            return res.status(409).json({ message: error.message });
         }
+        console.error('Error creating user:', error);
+        return res.status(400).json({ 
+            message: error.message || "Error creating user"
+        });
     }
+}
 
 
 

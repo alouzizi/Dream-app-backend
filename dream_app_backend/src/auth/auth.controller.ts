@@ -9,6 +9,7 @@ import {
 } from "@nestjs/swagger";
 import {
   Body,
+  ConflictException,
   Controller,
   Get,
   HttpException,
@@ -57,12 +58,20 @@ export class AuthController {
   })
   @ApiResponse({ status: 400, description: "Bad Request." })
   @UseInterceptors(FileInterceptor("avatar"))
-  register(
+  async register(
     @Req() req: Request,
     @Body() createUserDto: CreateUserDto,
     @UploadedFile() avatar: Express.Multer.File
   ) {
-    return this.userService.register(createUserDto, avatar);
+
+     try {
+        return await this.userService.register(createUserDto, avatar);
+    } catch (error) {
+        if (error instanceof ConflictException) {
+            throw new HttpException(error.message, HttpStatus.CONFLICT);
+        }
+        throw new HttpException('Something went wrong', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
   }
 
   @Post("login")

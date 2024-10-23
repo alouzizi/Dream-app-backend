@@ -3,12 +3,14 @@ import {
   HttpException,
   HttpStatus,
   Injectable,
+  InternalServerErrorException,
   NotAcceptableException,
   NotFoundException,
 } from "@nestjs/common";
 import { PrismaClient } from "@prisma/client";
 import { CreateUserDto } from "src/dto/create-user.dto";
 import { UserRoles } from "src/role.guard";
+import * as bcrypt from "bcrypt";
 
 @Injectable()
 export class UserService {
@@ -34,9 +36,25 @@ export class UserService {
   //get all users
   async getAllUsers() {
     return this.prisma.user.findMany({
-      where: {
-        role: "USER", // Filter by role "USER"
-      },
+        select: {
+            id: true,
+            name: true,
+            phoneNumber: true,
+            email: true,
+            gender: true,
+            points: true,
+            totalPoints: true,
+            type: true,
+            diamonds: true,
+            avatar: true,
+            createAt: true
+        },
+        orderBy: {
+            createAt: "desc"
+        },
+        where: {
+            role: "USER"
+        }
     });
   }
 
@@ -189,42 +207,62 @@ export class UserService {
   }
 
   //admin can create user
-  async createUser(body: CreateUserDto) {
+  async createUser(userData: CreateUserDto ) {
     try {
-      // Check if user already exists
-      const existingUser = await this.prisma.user.findUnique({
-        where: { email: body.email },
-      });
+        // Check if user already exists using OR condition
+        const existingUser = await this.prisma.user.findFirst({
+            where: {
+                OR: [
+                    { email: userData.email },
+                    { phoneNumber: userData.phoneNumber },
+                    { name: userData.name }
+                ]
+            }
+        });
 
-      if (existingUser) {
-        throw new ConflictException("User with this email already exists");
-      }
+        if (existingUser) {
+            // More specific error message
+            if (existingUser.email === userData.email) {
+                throw new ConflictException("User with this email already exists");
+            }
+            if (existingUser.phoneNumber === userData.phoneNumber) {
+                throw new ConflictException("User with this phone number already exists");
+            }
+            if (existingUser.name === userData.name) {
+                throw new ConflictException("User with this name already exists");
+            }
+        }
 
-      // If user doesn't exist, create new user
-      return await this.prisma.user.create({
-        data: {
-          name: body.name,
-          email: body.email,
-          password: body.password,
-          role: "USER",
-          type: body.type,
-          diamonds: 0,
-          points: 0,
-          totalPoints: 0,
-          city: body.city,
-          country: body.country,
-          phoneNumber: body.phoneNumber,
-          dob: body.dob ? new Date(body.dob) : null,
-          gender: body.gender,
-        },
-      });
+        // Hash the password
+        const hashedPassword = await bcrypt.hash(userData.password, 10);
+
+        // Create new user
+        return await this.prisma.user.create({
+            data: {
+                name: userData.name,
+                email: userData.email,
+                password: hashedPassword,
+                role: UserRoles.USER,
+                type: userData.type,
+                points: userData.initialCoins,
+                totalPoints: userData.initialCoins,
+                diamonds: userData.initialDiamonds,
+                city: userData.city,
+                country: userData.country,
+                phoneNumber: userData.phoneNumber,
+                dob: userData.dob ? new Date(userData.dob) : null,
+                gender: userData.gender,
+                avatar: userData.avatar,
+            },
+        });
     } catch (err) {
-      if (err instanceof ConflictException) {
-        throw err; // Re-throw ConflictException
-      }
-      throw new Error("Error while creating user");
+        if (err instanceof ConflictException) {
+            throw err;
+        }
+        console.error("Error creating user:", err);
+        throw new InternalServerErrorException("Error while creating user");
     }
-  }
+}
 
   async updateUserPoints(userId: number, newPoints: number) {
     return this.prisma.user.update({

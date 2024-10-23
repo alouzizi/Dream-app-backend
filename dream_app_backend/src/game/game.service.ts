@@ -156,4 +156,68 @@ export class GameService {
     }
     return game;
   }
+
+  async deleteGame(id: number) {
+    const game = await this.prisma.games.findUnique({
+        where: { id },
+        include: {
+            winners: true,
+            userGames: true,
+            questions: {
+                include: {
+                    options: true
+                }
+            },
+            scratchCard: true,
+            reports: true
+        }
+    });
+
+    if (!game) {
+        throw new NotFoundException('Game not found');
+    }
+
+    await this.prisma.$transaction(async (prisma) => {
+        // Delete options for all questions
+        for (const question of game.questions) {
+            await prisma.option.deleteMany({
+                where: { questionId: question.id }
+            });
+        }
+
+        // Delete questions
+        await prisma.question.deleteMany({
+            where: { gameId: id }
+        });
+
+        // Delete scratch card if exists
+        if (game.scratchCard) {
+            await prisma.scratchCard.delete({
+                where: { gameId: id }
+            });
+        }
+
+        // Delete user games
+        await prisma.userGames.deleteMany({
+            where: { gameId: id }
+        });
+
+        // Delete winners
+        await prisma.winners.deleteMany({
+            where: { gameId: id }
+        });
+
+        // Delete reports
+        await prisma.report.deleteMany({
+            where: { gameId: id }
+        });
+
+        // Finally delete the game
+        await prisma.games.delete({
+            where: { id }
+        });
+    });
+
+    return { message: 'Game deleted successfully' };
+}
 }
