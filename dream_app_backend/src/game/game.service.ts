@@ -189,6 +189,27 @@ export class GameService {
     return games;
   }
 
+
+  async joinGame(gameId: number, userId: number) {
+    const game = await this.prisma.games.findUnique({
+      where: { id: gameId },
+    });
+
+    if (!game) {
+      throw new NotFoundException(`Game with ID ${gameId} not found.`);
+    }
+
+    const userGame = await this.prisma.userGames.create({
+      data: {
+        gameId: gameId,
+        userId: userId,
+ 
+      },
+    });
+
+    return userGame;
+  }
+  
   async deleteGame(id: number) {
     const game = await this.prisma.games.findUnique({
       where: { id },

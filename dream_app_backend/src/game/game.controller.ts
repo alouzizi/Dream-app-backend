@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, Param, UseGuards,Delete, ParseIntPipe, Res } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, UseGuards,Delete, ParseIntPipe, Res, Request } from '@nestjs/common';
 import { GameService } from './game.service';
 import { CreateGameDto } from './dto/game.dto';
 import { RoleGuard, Roles, UserRoles } from 'src/role.guard';
@@ -23,6 +23,11 @@ export class GameController {
     return this.gameService.createGame(createGameDto);
   }
 
+  @Post('join')
+  async joinGame(@Body() body: { gameId: number }, @Request() req) {
+    return this.gameService.joinGame(body.gameId, req.user.id);
+  }
+
   @Get()
   async getAllGames() {
     
@@ -35,6 +40,7 @@ export class GameController {
     return this.gameService.getGameById(+id);
   }
   
+
 
   //delete game by id
   @Delete(':id')
@@ -123,8 +129,6 @@ export class GameController {
 
 
 
-
-  //add user to the game whene user join the game 
 
   //get result of the game by game id when the game status is ended if user in the game return the result
 

@@ -92,8 +92,8 @@ model Winners {
 model UserGames {
   userId   Int
   gameId   Int
-  gameTime Int
-  score    Int
+  gameTime Int?
+  score    Int?
   User     User  @relation(fields: [userId], references: [id])
   Games    Games @relation(fields: [gameId], references: [id])
 
