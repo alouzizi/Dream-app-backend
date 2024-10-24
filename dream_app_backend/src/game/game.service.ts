@@ -18,12 +18,16 @@ export class GameService {
     let status: GameStatus;
 
     const startDate = new Date(createGameDto.startingDate);
-    const duration = createGameDto.quizFile.reduce((total, question) => total + question.time, 0);
+    const duration = createGameDto.quizFile.reduce(
+      (total, question) => total + question.time,
+      0
+    );
     const endDate = new Date(startDate.getTime() + duration * 1000);
-
 
     console.log("startDate", startDate);
     console.log("endDate", endDate);
+
+    const reward = createGameDto.quizFile.length * 5;
 
     if (now < startDate) {
       status = GameStatus.PENDING;
@@ -34,9 +38,11 @@ export class GameService {
     }
 
     //check if sponsor is empty return error
+
     if (createGameDto.sponsors.length === 0) {
       throw new NotFoundException("Sponsor is required");
     }
+    console.log("createGameDto.sponsors", createGameDto.sponsors);
     //check if the sponsers is exist in the database
     const sponsor = await this.prisma.sponsor.findMany({
       where: {
@@ -56,6 +62,7 @@ export class GameService {
         prizes: createGameDto.prizes,
         status: status,
         startDate: startDate,
+        reward: reward,
         // endDate: createGameDto.endDate,
         sponsorId:
           createGameDto.sponsors.length > 0
@@ -157,67 +164,91 @@ export class GameService {
     return game;
   }
 
+  async getAllGames() {
+    const games = await this.prisma.games.findMany({
+      where: {
+        status: {
+          in: ["STARTED", "PENDING"],
+        },
+      },
+      select: {
+        startDate: true,
+        name: true,
+        requiredDiamonds: true,
+        reward: true,
+        prizes: true,
+        status: true,
+        sponsorId: {
+          select: {
+            name: true,
+          },
+        },
+      },
+    });
+    return games;
+  }
+
   async deleteGame(id: number) {
     const game = await this.prisma.games.findUnique({
-        where: { id },
-        include: {
-            winners: true,
-            userGames: true,
-            questions: {
-                include: {
-                    options: true
-                }
-            },
-            scratchCard: true,
-            reports: true
-        }
+      where: { id },
+      include: {
+        winners: true,
+        userGames: true,
+        questions: {
+          include: {
+            options: true,
+          },
+        },
+        scratchCard: true,
+        reports: true,
+      },
     });
 
     if (!game) {
-        throw new NotFoundException('Game not found');
+      throw new NotFoundException("Game not found");
     }
 
     await this.prisma.$transaction(async (prisma) => {
-        // Delete options for all questions
-        for (const question of game.questions) {
-            await prisma.option.deleteMany({
-                where: { questionId: question.id }
-            });
-        }
-
-        // Delete questions
-        await prisma.question.deleteMany({
-            where: { gameId: id }
+      // Delete options for all questions
+      for (const question of game.questions) {
+        await prisma.option.deleteMany({
+          where: { questionId: question.id },
         });
+      }
 
-        // Delete scratch card if exists
-        if (game.scratchCard) {
-            await prisma.scratchCard.delete({
-                where: { gameId: id }
-            });
-        }
+      // Delete questions
+      await prisma.question.deleteMany({
+        where: { gameId: id },
+      });
 
-        // Delete user games
-        await prisma.userGames.deleteMany({
-            where: { gameId: id }
+      // Delete scratch card if exists
+      if (game.scratchCard) {
+        await prisma.scratchCard.delete({
+          where: { gameId: id },
         });
+      }
 
-        // Delete winners
-        await prisma.winners.deleteMany({
-            where: { gameId: id }
-        });
+      // Delete user games
+      await prisma.userGames.deleteMany({
+        where: { gameId: id },
+      });
 
-        // Delete reports
-        await prisma.report.deleteMany({
-            where: { gameId: id }
-        });
+      // Delete winners
+      await prisma.winners.deleteMany({
+        where: { gameId: id },
+      });
 
-        // Finally delete the game
-        await prisma.games.delete({
-            where: { id }
-        });
+      // Delete reports
+      await prisma.report.deleteMany({
+        where: { gameId: id },
+      });
+
+      // Finally delete the game
+      await prisma.games.delete({
+        where: { id },
+      });
     });
 
-    return { message: 'Game deleted successfully' };
-}
+    return { message: "Game deleted successfully" };
+  }
 }

@@ -61,6 +61,7 @@ model Games {
   // duration         Int // duration in seconds
   prizes           String[]
   answersId        Int?
+  reward           Int
   // images           String?
   // options          String?
   status           GameStatus
@@ -72,7 +73,7 @@ model Games {
   questions        Question[]
   scratchCard      ScratchCard?
   reports          Report[]
-  createdAt        DateTime    @default(now())
+  createdAt        DateTime    @default(now()) 
   startDate        DateTime?
   endDate          DateTime?
 }

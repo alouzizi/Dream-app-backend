@@ -23,12 +23,18 @@ export class GameController {
     return this.gameService.createGame(createGameDto);
   }
 
+  @Get()
+  async getAllGames() {
+    
+      return this.gameService.getAllGames();
+  }
+
   @Get(':id')
   async getGame(@Param('id') id: string) {
     // const gameId = parseInt(id);
     return this.gameService.getGameById(+id);
   }
-
+  
 
   //delete game by id
   @Delete(':id')
@@ -114,6 +120,15 @@ export class GameController {
           });
       }
   }
+
+
+ 
+  
+ // reward = number of questions * 5
+
+// get all games started and painding {getname, required diamonds, reward, prize, status, sponsoreName, name}
+
+
 
 
   //get games by mobile app user the games have status created and just name of game and required diamonds and duration and reward
