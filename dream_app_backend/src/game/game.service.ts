@@ -172,6 +172,7 @@ export class GameService {
         },
       },
       select: {
+        id: true,
         startDate: true,
         name: true,
         requiredDiamonds: true,

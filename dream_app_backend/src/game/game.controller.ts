@@ -122,16 +122,7 @@ export class GameController {
   }
 
 
- 
-  
- // reward = number of questions * 5
 
-// get all games started and painding {getname, required diamonds, reward, prize, status, sponsoreName, name}
-
-
-
-
-  //get games by mobile app user the games have status created and just name of game and required diamonds and duration and reward
 
   //add user to the game whene user join the game 
 
